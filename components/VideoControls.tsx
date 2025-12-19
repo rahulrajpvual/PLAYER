@@ -3,9 +3,10 @@ import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize, 
   Settings, PictureInPicture, Zap, Speaker, Activity,
   Eye, Aperture, Search, PenTool, SplitSquareHorizontal, Layers,
-  Mic2, AlertTriangle, ChevronsLeft, ChevronsRight, Check, Scaling
+  Mic2, AlertTriangle, ChevronsLeft, ChevronsRight, Check, Scaling,
+  Grid3x3, LayoutGrid, Square, Crosshair, ChevronDown, LogOut
 } from 'lucide-react';
-import { VideoState, Shot, SceneSegment, SubtitleTrack, AudioTrackInfo } from '../types';
+import { VideoState, Shot, SceneSegment, SubtitleTrack, AudioTrackInfo, GridMode } from '../types';
 
 interface VideoControlsProps {
   state: VideoState;
@@ -31,6 +32,8 @@ interface VideoControlsProps {
   onSubtitleUpload: () => void;
   onToggleSidebar: () => void;
   onToggleScaling: () => void;
+  onGridModeChange: (mode: GridMode) => void;
+  gridMode: GridMode;
   activeSubtitleId: string;
   isDrawingMode: boolean;
   isSidebarOpen: boolean;
@@ -93,7 +96,9 @@ const VideoControls: React.FC<VideoControlsProps> = ({
   brushColor,
   setBrushColor,
   brushSize,
-  setBrushSize
+  setBrushSize,
+  gridMode,
+  onGridModeChange
 }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showAudioMixer, setShowAudioMixer] = useState(false);
@@ -101,7 +106,10 @@ const VideoControls: React.FC<VideoControlsProps> = ({
   const [hoverPosition, setHoverPosition] = useState<number>(0);
   const settingsRef = useRef<HTMLDivElement>(null);
   const audioMixerRef = useRef<HTMLDivElement>(null);
+  const gridMenuRef = useRef<HTMLDivElement>(null);
   const progressContainerRef = useRef<HTMLDivElement>(null);
+
+  const [showGridMenu, setShowGridMenu] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -110,6 +118,9 @@ const VideoControls: React.FC<VideoControlsProps> = ({
       }
       if (audioMixerRef.current && !audioMixerRef.current.contains(event.target as Node)) {
         setShowAudioMixer(false);
+      }
+      if (gridMenuRef.current && !gridMenuRef.current.contains(event.target as Node)) {
+        setShowGridMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -128,11 +139,11 @@ const VideoControls: React.FC<VideoControlsProps> = ({
 
   return (
     <div 
-      className={`absolute bottom-0 left-0 right-0 p-6 pt-32 bg-gradient-to-t from-black via-black/80 to-transparent transition-opacity duration-500 ease-in-out ${state.showControls || !state.isPlaying ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'} ${isSidebarOpen && !state.isFullscreen ? 'mr-80' : ''}`}
+      className={`absolute bottom-0 left-0 right-0 p-4 md:p-6 pt-16 md:pt-32 bg-gradient-to-t from-black via-black/80 to-transparent transition-opacity duration-500 ease-in-out ${state.showControls || !state.isPlaying ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'} ${isSidebarOpen && !state.isFullscreen ? 'md:mr-80' : ''}`}
     >
       {/* Visual Tools Bar (Floating above controls) */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-4">
-          <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-full p-1 flex items-center gap-1 shadow-2xl pointer-events-auto relative">
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 md:gap-4 w-full md:w-auto px-4 justify-center">
+          <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-full p-1 flex items-center gap-0.5 md:gap-1 shadow-2xl pointer-events-auto relative">
               <button 
                   onClick={(e) => { e.stopPropagation(); onFilterChange(state.visualFilter === 'false-color' ? 'none' : 'false-color'); }}
                   className={`p-2 rounded-full transition-all ${state.visualFilter === 'false-color' ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
@@ -147,10 +158,10 @@ const VideoControls: React.FC<VideoControlsProps> = ({
               >
                   <Eye size={18} />
               </button>
-              <div className="w-px h-4 bg-white/10 mx-1"></div>
+              <div className="hidden sm:block w-px h-4 bg-white/10 mx-1"></div>
               <button 
                   onClick={(e) => { e.stopPropagation(); onToggleLoupe(); }}
-                  className={`p-2 rounded-full transition-all ${state.isLoupeActive ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
+                  className={`p-2 rounded-full transition-all hidden sm:flex ${state.isLoupeActive ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
                   title="Pixel Zoom (Loupe)"
               >
                   <Search size={18} />
@@ -165,11 +176,45 @@ const VideoControls: React.FC<VideoControlsProps> = ({
               <div className="w-px h-4 bg-white/10 mx-1"></div>
               <button 
                   onClick={(e) => { e.stopPropagation(); onToggleCompare(); }}
-                  className={`p-2 rounded-full transition-all ${state.isCompareMode ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
+                  className={`p-2 rounded-full transition-all hidden sm:flex ${state.isCompareMode ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
                   title="Compare Mode"
               >
                   <SplitSquareHorizontal size={18} />
               </button>
+              
+              <div className="w-px h-4 bg-white/10 mx-1"></div>
+              
+              <div className="relative" ref={gridMenuRef}>
+                  <button 
+                      onClick={(e) => { e.stopPropagation(); setShowGridMenu(!showGridMenu); }}
+                      className={`p-2 rounded-full transition-all ${gridMode !== 'none' ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
+                      title="Composition Grids"
+                  >
+                      <Grid3x3 size={18} />
+                  </button>
+                  
+                  {showGridMenu && (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-1 shadow-2xl flex flex-col gap-1 min-w-[140px] animate-in fade-in slide-in-from-bottom-2 z-50">
+                          {[
+                              { id: 'none', label: 'No Grid', icon: <Square size={14} /> },
+                              { id: 'thirds', label: 'Rule of Thirds', icon: <Grid3x3 size={14} /> },
+                              { id: 'golden', label: 'Golden Ratio', icon: <LayoutGrid size={14} /> },
+                              { id: 'crosshair', label: 'Crosshair', icon: <Crosshair size={14} /> },
+                              { id: 'diagonal', label: 'Diagonal', icon: <SplitSquareHorizontal className="rotate-45" size={14} /> },
+                          ].map((item) => (
+                              <button 
+                                  key={item.id}
+                                  onClick={(e) => { e.stopPropagation(); onGridModeChange(item.id as GridMode); setShowGridMenu(false); }}
+                                  className={`flex items-center gap-3 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${gridMode === item.id ? 'bg-white text-black' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                              >
+                                  {item.icon}
+                                  {item.label}
+                              </button>
+                          ))}
+                      </div>
+                  )}
+              </div>
+
               <button 
                   onClick={(e) => { e.stopPropagation(); onToggleSidebar(); }}
                   className={`p-2 rounded-full transition-all ${isSidebarOpen ? 'bg-white/20 text-white' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
@@ -207,7 +252,7 @@ const VideoControls: React.FC<VideoControlsProps> = ({
       </div>
 
       {/* Main Controls Bar */}
-      <div className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl ring-1 ring-white/5 relative z-20 pointer-events-auto">
+      <div className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-2xl p-2 md:p-4 shadow-2xl ring-1 ring-white/5 relative z-20 pointer-events-auto">
         
         {/* Progress Bar Container */}
         <div 
@@ -335,9 +380,9 @@ const VideoControls: React.FC<VideoControlsProps> = ({
           />
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 md:gap-4">
           {/* Left Controls */}
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-2 md:space-x-6">
             <button 
               onClick={onPlayPause}
               className="text-white hover:text-indigo-400 transition-all transform active:scale-95 focus:outline-none"
@@ -409,7 +454,7 @@ const VideoControls: React.FC<VideoControlsProps> = ({
                title="Cinema Audio Mode"
             >
               <Activity size={18} />
-              {state.isCinemaMode && <span className="text-[10px] font-bold uppercase tracking-wider hidden md:inline">Immersive</span>}
+              {state.isCinemaMode && <span className="text-[10px] font-black uppercase tracking-wider hidden lg:inline">Immersive</span>}
             </button>
             
             <button

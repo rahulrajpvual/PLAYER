@@ -1,6 +1,7 @@
 
 
 export type VisualFilter = 'none' | 'false-color' | 'focus-peaking' | 'monochrome' | 'negative';
+export type GridMode = 'none' | 'thirds' | 'golden' | 'crosshair' | 'diagonal';
 
 export interface VideoState {
   isPlaying: boolean;

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import VideoControls from './VideoControls';
-import { VideoState, AnalysisState, Note, Shot, SceneSegment, SceneType, VisualFilter, AnnotationLine, ActivityLog, MovieMeta, SubtitleTrack, AudioTrackInfo } from '../types';
+import { VideoState, AnalysisState, Note, Shot, SceneSegment, SceneType, VisualFilter, AnnotationLine, ActivityLog, MovieMeta, SubtitleTrack, AudioTrackInfo, GridMode } from '../types';
 import { 
   X, Activity, StopCircle, Check, ScanEye, Grid3x3, Layout, Target, Scaling, 
   BookOpen, Camera, Trash2, ChevronRight, Image as ImageIcon,
@@ -16,7 +16,6 @@ interface VideoPlayerProps {
   onClose: () => void;
 }
 
-type GridMode = 'none' | 'thirds' | 'golden' | 'crosshair' | 'diagonal';
 type SidebarTab = 'storyboard' | 'scenes' | 'monitor';
 
 const SCENE_TYPES: SceneType[] = ['action', 'comedy', 'drama', 'thriller', 'song', 'twist', 'horror', 'romance', 'dialogue'];
@@ -923,7 +922,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
     <div className="fixed inset-0 bg-black z-50 flex overflow-hidden" ref={containerRef}>
        {/* Main Video Area with Controls Integrated */}
        <div 
-          className={`relative flex-1 bg-black flex items-center justify-center overflow-hidden transition-all duration-300 ${isSidebarOpen && !state.isFullscreen ? 'mr-80' : ''}`}
+          className={`relative flex-1 bg-black flex items-center justify-center overflow-hidden transition-all duration-300 `}
           onDoubleClick={toggleFullscreen}
        >
           
@@ -1003,15 +1002,38 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
           )}
 
           {/* Grid Overlays */}
-          {gridMode === 'thirds' && (
+          {gridMode !== 'none' && (
               <div className="absolute inset-0 pointer-events-none z-10">
-                  <div className="absolute top-1/3 left-0 w-full h-px bg-white/30"></div>
-                  <div className="absolute top-2/3 left-0 w-full h-px bg-white/30"></div>
-                  <div className="absolute left-1/3 top-0 h-full w-px bg-white/30"></div>
-                  <div className="absolute left-2/3 top-0 h-full w-px bg-white/30"></div>
+                  {gridMode === 'thirds' && (
+                      <>
+                          <div className="absolute top-1/3 left-0 w-full h-px bg-white/30"></div>
+                          <div className="absolute top-2/3 left-0 w-full h-px bg-white/30"></div>
+                          <div className="absolute left-1/3 top-0 h-full w-px bg-white/30"></div>
+                          <div className="absolute left-2/3 top-0 h-full w-px bg-white/30"></div>
+                      </>
+                  )}
+                  {gridMode === 'golden' && (
+                      <>
+                          <div className="absolute top-[38.2%] left-0 w-full h-px bg-white/30"></div>
+                          <div className="absolute top-[61.8%] left-0 w-full h-px bg-white/30"></div>
+                          <div className="absolute left-[38.2%] top-0 h-full w-px bg-white/30"></div>
+                          <div className="absolute left-[61.8%] top-0 h-full w-px bg-white/30"></div>
+                      </>
+                  )}
+                  {gridMode === 'crosshair' && (
+                      <>
+                          <div className="absolute top-1/2 left-0 w-full h-px bg-white/30"></div>
+                          <div className="absolute left-1/2 top-0 h-full w-px bg-white/30"></div>
+                      </>
+                  )}
+                  {gridMode === 'diagonal' && (
+                      <svg className="absolute inset-0 w-full h-full">
+                          <line x1="0" y1="0" x2="100%" y2="100%" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                          <line x1="100%" y1="0" x2="0" y2="100%" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                      </svg>
+                  )}
               </div>
           )}
-          {/* ... other grids could go here ... */}
 
           {/* Feedback Icon */}
           {feedbackIcon && (
@@ -1052,6 +1074,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                 onSubtitleUpload={() => subtitleInputRef.current?.click()}
                 onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                 onToggleScaling={() => setState(s => ({...s, scalingMode: s.scalingMode === 'contain' ? 'cover' : 'contain'}))}
+                onGridModeChange={(mode) => setGridMode(mode)}
+                gridMode={gridMode}
                 activeSubtitleId={activeSubtitleId}
                 isDrawingMode={isDrawingMode}
                 isSidebarOpen={isSidebarOpen}

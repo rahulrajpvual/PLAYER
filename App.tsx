@@ -550,12 +550,12 @@ const App: React.FC = () => {
             />
         ) : (
           <div className="flex-1 flex flex-col h-screen">
-            <div className="w-full p-8 flex justify-between items-center z-50">
+            <div className="w-full p-4 md:p-8 flex justify-between items-center z-50">
               <div className="flex items-center gap-4">
                 <FilmdaLogo />
-                <h1 className="text-2xl font-black tracking-tighter">FILMDA</h1>
+                <h1 className="text-xl md:text-2xl font-black tracking-tighter">FILMDA</h1>
               </div>
-              <div className="flex bg-white/5 p-1.5 rounded-full border border-white/5 backdrop-blur-md">
+              <div className="hidden md:flex bg-white/5 p-1.5 rounded-full border border-white/5 backdrop-blur-md">
                 {[
                     { id: 'upload', label: 'STUDIO', icon: <Upload size={14} /> },
                     { id: 'calendar', label: 'JOURNAL', icon: <CalendarIcon size={14} /> },
@@ -572,6 +572,11 @@ const App: React.FC = () => {
                       {tab.label}
                     </button>
                 ))}
+              </div>
+              <div className="md:hidden">
+                 <button onClick={() => setFile(null)} className="p-2 bg-white/5 rounded-full border border-white/10">
+                    <LogOut size={16} className="text-gray-500" />
+                 </button>
               </div>
             </div>
 
@@ -604,18 +609,18 @@ const App: React.FC = () => {
               )}
 
               {activeTab === 'calendar' && (
-                  <div className="w-full flex h-[calc(100vh-100px)] overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
+                  <div className="w-full flex flex-col md:flex-row h-full md:h-[calc(100vh-100px)] overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
                       {/* Main Calendar Area */}
-                      <div className="flex-1 overflow-y-auto custom-scrollbar p-8 pb-20">
-                          <div className="flex items-center justify-between mb-8">
+                      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 pb-32 md:pb-20">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                               <div>
-                                <h2 className="text-3xl font-black uppercase tracking-tight">Cine-Planner</h2>
-                                <p className="text-gray-500 font-bold text-sm mt-1">Orchestrate your cinematic journey.</p>
+                                <h2 className="text-xl md:text-3xl font-black uppercase tracking-tight">Cine-Planner</h2>
+                                <p className="text-gray-500 font-bold text-[10px] md:text-sm mt-0.5 md:mt-1">Orchestrate your cinematic journey.</p>
                               </div>
-                              <div className="flex items-center gap-4 bg-[#121212] border border-white/10 rounded-full px-4 py-2">
-                                  <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} className="hover:bg-white/10 p-1 rounded-full bg-transparent border-none text-white"><ChevronLeft size={20}/></button>
-                                  <span className="font-bold w-40 text-center uppercase tracking-widest text-xs">{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-                                  <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))} className="hover:bg-white/10 p-1 rounded-full bg-transparent border-none text-white"><ChevronRight size={20}/></button>
+                              <div className="flex items-center gap-2 md:gap-4 bg-[#121212] border border-white/10 rounded-full px-3 py-1.5 md:px-4 md:py-2">
+                                  <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} className="hover:bg-white/10 p-1 rounded-full bg-transparent border-none text-white"><ChevronLeft size={16}/></button>
+                                  <span className="font-bold w-32 md:w-40 text-center uppercase tracking-widest text-[10px] md:text-xs">{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                                  <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))} className="hover:bg-white/10 p-1 rounded-full bg-transparent border-none text-white"><ChevronRight size={16}/></button>
                               </div>
                           </div>
                           
@@ -626,9 +631,9 @@ const App: React.FC = () => {
                               </div>
                           )}
                           
-                          <div className="grid grid-cols-7 gap-px bg-white/5 border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl backdrop-blur-xl">
-                              {['SUN','MON','TUE','WED','THU','FRI','SAT'].map(d => (
-                                  <div key={d} className="bg-[#0a0a0a] p-5 text-xs font-black text-gray-600 text-center uppercase tracking-[0.3em]">{d}</div>
+                          <div className="grid grid-cols-7 gap-px bg-white/5 border border-white/5 rounded-2xl md:rounded-[2rem] overflow-hidden shadow-2xl backdrop-blur-xl">
+                              {['S','M','T','W','T','F','S'].map((d, idx) => (
+                                  <div key={`${d}-${idx}`} className="bg-[#0a0a0a] py-3 text-[10px] md:text-xs font-black text-gray-600 text-center uppercase tracking-[0.2em]">{d}</div>
                               ))}
                               {calendarDays.map((day, i) => (
                                   <div 
@@ -644,15 +649,15 @@ const App: React.FC = () => {
                                             addPlannerEntryFromList(movie, day.timestamp);
                                         }
                                     }}
-                                    className={`bg-[#0e0e0e]/50 h-[160px] p-4 hover:bg-[#151515] transition-all relative group flex flex-col border-[0.5px] border-white/5 ${day && new Date().getDate() === day.day && new Date().getMonth() === currentDate.getMonth() ? 'bg-indigo-500/5' : ''}`}
+                                    className={`bg-[#0e0e0e]/50 min-h-[80px] md:h-[160px] p-1 md:p-4 hover:bg-[#151515] transition-all relative group flex flex-col border-[0.5px] border-white/5 ${day && new Date().getDate() === day.day && new Date().getMonth() === currentDate.getMonth() ? 'bg-indigo-500/5' : ''}`}
                                   >
                                       {day ? (
                                           <>
                                               <div className="flex justify-between items-start mb-4">
-                                                  <div className={`text-sm font-black transition-colors ${new Date().getDate() === day.day && new Date().getMonth() === currentDate.getMonth() ? 'text-indigo-400 scale-125' : 'text-gray-500'}`}>{day.day}</div>
-                                                  <button onClick={() => setIsAddingPlan(day.timestamp)} className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-white transition-all bg-white/5 p-1 rounded-md hover:scale-110"><Plus size={14} /></button>
+                                                  <div className={`text-[10px] md:text-sm font-black transition-colors ${new Date().getDate() === day.day && new Date().getMonth() === currentDate.getMonth() ? 'text-indigo-400 scale-125' : 'text-gray-500'}`}>{day.day}</div>
+                                                  <button onClick={() => setIsAddingPlan(day.timestamp)} className="md:opacity-0 group-hover:opacity-100 text-gray-500 hover:text-white transition-all bg-white/5 p-1 rounded-md hover:scale-110"><Plus size={14} /></button>
                                               </div>
-                                                <div className="flex-1 relative flex items-center justify-center min-h-[100px] mt-2 group-hover:scale-105 transition-transform duration-500">
+                                                <div className="flex-1 relative flex items-center justify-center min-h-[40px] md:min-h-[100px] mt-1 md:mt-2 group-hover:scale-105 transition-transform duration-500">
                                                    {/* Stacked Posters */}
                                                    {day.plans.length === 0 && day.movies.length === 0 && (
                                                        <div className="absolute inset-x-4 inset-y-8 rounded-xl border border-dashed border-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -676,7 +681,7 @@ const App: React.FC = () => {
                                                                    filter: `blur(${reverseIdx * 0.5}px)`
                                                                }}
                                                            >
-                                                               <div className={`relative w-20 h-28 rounded-xl overflow-hidden shadow-2xl border ${item.type === 'watched' ? 'border-green-500/50 grayscale-[0.5]' : 'border-white/10'}`}>
+                                                               <div className={`relative w-12 h-16 md:w-20 md:h-28 rounded-lg md:rounded-xl overflow-hidden shadow-2xl border ${item.type === 'watched' ? 'border-green-500/50 grayscale-[0.5]' : 'border-white/10'}`}>
                                                                    {item.posterPath ? (
                                                                        <img src={item.posterPath} alt="" className="w-full h-full object-cover" />
                                                                    ) : (
@@ -741,9 +746,9 @@ const App: React.FC = () => {
                       </div>
 
                       {/* Discovery Sidebar */}
-                      <aside className="w-[450px] border-l border-white/5 bg-[#0a0a0a]/80 backdrop-blur-3xl flex flex-col">
-                          <div className="p-8 border-b border-white/5">
-                              <div className="flex items-center gap-3 mb-8">
+                      <aside className="w-full md:w-[450px] border-t md:border-t-0 md:border-l border-white/5 bg-[#0a0a0a]/80 backdrop-blur-3xl flex flex-col min-h-[300px] md:h-auto">
+                          <div className="p-4 md:p-8 border-b border-white/5">
+                              <div className="flex items-center gap-3 mb-4 md:mb-8">
                                   <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
                                       <TrendingUp size={20} className="text-indigo-400" />
                                   </div>
@@ -1042,6 +1047,26 @@ const App: React.FC = () => {
                       </div>
                   </div>
               )}
+            </div>
+            
+            {/* Mobile Bottom Navigation */}
+            <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] bg-black/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-2 flex items-center justify-around shadow-2xl z-[100]">
+                {[
+                    { id: 'upload', icon: <Upload size={18} />, label: 'Studio' },
+                    { id: 'calendar', icon: <CalendarIcon size={18} />, label: 'Journal' },
+                    { id: 'analysis', icon: <BarChart3 size={18} />, label: 'Stats' },
+                    { id: 'insights', icon: <TrendingUp size={18} />, label: 'Analytics' },
+                    { id: 'movies', icon: <Film size={18} />, label: 'Library' },
+                ].map((tab) => (
+                    <button 
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as any)}
+                        className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all ${activeTab === tab.id ? 'bg-indigo-500 text-white shadow-lg' : 'text-gray-500'}`}
+                    >
+                        {tab.icon}
+                        <span className="text-[8px] font-black uppercase mt-1 tracking-widest">{tab.label}</span>
+                    </button>
+                ))}
             </div>
           </div>
         )}
