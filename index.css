@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@theme {
+  --animate-spin-3d: spin-3d 25s linear infinite;
+  --animate-tumble: tumble 18s linear infinite;
+  --animate-blob: blob 7s infinite;
+
+  @keyframes spin-3d {
+    0% { transform: rotateX(0) rotateY(0) rotateZ(0); }
+    100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+  }
+  @keyframes tumble {
+    0% { transform: rotateX(0) rotateY(0) rotateZ(0); }
+    100% { transform: rotateX(180deg) rotateY(360deg) rotateZ(-180deg); }
+  }
+  @keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+  }
+}
+
+@utility preserve-3d {
+  transform-style: preserve-3d;
+}
+
+@utility perspective-800 {
+  perspective: 800px;
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+  }
+}
+
+@utility wireframe-face {
+  @apply absolute border border-white/20 bg-indigo-500/5 backdrop-blur-sm box-border;
+  transform-origin: 50% 50%;
+  backface-visibility: visible;
+}
