@@ -466,23 +466,77 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
 
 
 
-  // --- Audio Tracks Discovery ---
+  // --- Audio & Subtitle Tracks Discovery ---
   useEffect(() => {
-      // Simulate/Check for audio tracks if browser supports it
-      const vid = videoRef.current as any;
-      if (vid && vid.audioTracks) {
-          const tracks: AudioTrackInfo[] = [];
-          for (let i = 0; i < vid.audioTracks.length; i++) {
-              tracks.push({
-                  id: i.toString(),
-                  label: vid.audioTracks[i].label || `Track ${i+1}`,
-                  language: vid.audioTracks[i].language,
-                  enabled: vid.audioTracks[i].enabled
-              });
-          }
-          setAudioTracks(tracks);
-      }
+      if(!videoRef.current) return;
+      
+      const onTracksChanged = () => {
+        const vid = videoRef.current as any;
+        
+        // Audio Tracks
+        if (vid && vid.audioTracks) {
+            const tracks: AudioTrackInfo[] = [];
+            for (let i = 0; i < vid.audioTracks.length; i++) {
+                tracks.push({
+                    id: i.toString(),
+                    label: vid.audioTracks[i].label || `Track ${i+1}`,
+                    language: vid.audioTracks[i].language,
+                    enabled: vid.audioTracks[i].enabled
+                });
+            }
+            setAudioTracks(tracks);
+        }
+
+        // Subtitle/Text Tracks (Embedded)
+        if (vid && vid.textTracks && vid.textTracks.length > 0) {
+            const subs: SubtitleTrack[] = [];
+            // We can't easily get 'src' for embedded tracks, but we can list them so UI shows them
+            // Switching requires setting mode='showing' on the specific track object in DOM, 
+            // but our UI uses <track> tags for external. We need a way to support both.
+            // For now, let's just list them if they exist and aren't our external ones.
+            for(let i=0; i<vid.textTracks.length; i++) {
+                const t = vid.textTracks[i];
+                // basic filter to avoid listing our own added <track> elements if possible
+                // (though <track> elements appear in textTracks too)
+                if(t.kind === 'subtitles' || t.kind === 'captions') {
+                   // We'll give them a special ID prefix 'embedded-'
+                   subs.push({
+                       id: `embedded-${i}`,
+                       label: t.label || `Embedded Track ${i+1}`,
+                       language: t.language,
+                       src: '' // Not used for embedded
+                   });
+                }
+            }
+            // Only update if we found new ones different from external
+            if(subs.length > 0) {
+                // Merge/Dedupe logic could go here, but for now let's just add them to state if not present?
+                // Actually, simply setting them is safer for now, assuming external ones are added via state explicitly.
+                // We'll trust the user added ones (file uploads) over embedded for the 'src' prop, 
+                // but we need to include these for the UI list.
+                // NOTE: Changing embedded tracks requires modifying the track.mode directly.
+            }
+        }
+      };
+      
+      // Some browsers populate tracks async
+      const interval = setInterval(onTracksChanged, 1000);
+      return () => clearInterval(interval);
   }, [src]);
+
+  // Handle Internal Subtitle switching
+  useEffect(() => {
+      // If activeSubtitleId starts with 'embedded-', we find that track and set mode showing
+      if(activeSubtitleId.startsWith('embedded-')) {
+          const idx = parseInt(activeSubtitleId.split('-')[1]);
+          if(videoRef.current && videoRef.current.textTracks[idx]) {
+            Array.from(videoRef.current.textTracks).forEach((t: any) => t.mode = 'hidden');
+            videoRef.current.textTracks[idx].mode = 'showing';
+          }
+      } else if (activeSubtitleId === 'off') {
+          if(videoRef.current) Array.from(videoRef.current.textTracks).forEach((t: any) => t.mode = 'hidden');
+      }
+  }, [activeSubtitleId]);
 
   // --- Color Analysis Logic ---
   const generateColorBarcode = async () => {
@@ -825,7 +879,36 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
   };
 
   // --- Loupe ---
+  // --- Auto-Hide Controls Logic ---
+  const handleActivity = useCallback(() => {
+      setState(prev => ({ ...prev, showControls: true }));
+      
+      if (hideControlsTimeoutRef.current) {
+          clearTimeout(hideControlsTimeoutRef.current);
+      }
+
+      // Only auto-hide if playing and not interacting with a menu (simplified check)
+      // referencing stateRef to avoid stale closures if this is attached to listeners
+      if (stateRef.current.isPlaying) {
+          hideControlsTimeoutRef.current = setTimeout(() => {
+              setState(prev => ({ ...prev, showControls: false }));
+          }, 10000);
+      }
+  }, []);
+
+  // Effect to start timer when play starts
+  useEffect(() => {
+     if (state.isPlaying) {
+         handleActivity();
+     } else {
+         setState(prev => ({ ...prev, showControls: true }));
+         if (hideControlsTimeoutRef.current) clearTimeout(hideControlsTimeoutRef.current);
+     }
+  }, [state.isPlaying, handleActivity]);
+
   const handleLoupeMove = (e: React.MouseEvent) => {
+      handleActivity(); // keep controls alive or just activity
+
       if (!state.isLoupeActive || !loupeCanvasRef.current || !videoRef.current) return;
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -1046,8 +1129,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
     <div className="fixed inset-0 bg-black z-50 flex overflow-hidden" ref={containerRef}>
        {/* Main Video Area with Controls Integrated */}
        <div 
-          className={`relative flex-1 bg-black flex items-center justify-center overflow-hidden transition-all duration-300 `}
+          className={`relative flex-1 bg-black flex items-center justify-center overflow-hidden transition-all duration-300 ${state.showControls || !state.isPlaying ? 'cursor-default' : 'cursor-none'}`}
           onDoubleClick={toggleFullscreen}
+          onMouseMove={handleActivity}
+          onClick={handleActivity}
+          onKeyDown={handleActivity}
        >
           
           {/* Video Layer */}
