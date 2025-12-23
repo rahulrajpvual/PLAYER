@@ -1032,6 +1032,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
     setTimeout(() => setFeedbackIcon(null), 600);
   };
 
+  const ratingBufferRef = useRef<string>("");
+  const ratingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // --- Keyboard Controls ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1039,6 +1042,31 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       if (!videoRef.current) return;
 
       const key = e.key.toLowerCase();
+
+      // Number Input for Rating
+      if (/^[0-9]$/.test(e.key)) {
+          e.preventDefault();
+          if (ratingTimeoutRef.current) clearTimeout(ratingTimeoutRef.current);
+
+          const newBuffer = ratingBufferRef.current + e.key;
+          const val = parseInt(newBuffer);
+
+          if (val <= 100) {
+              ratingBufferRef.current = newBuffer;
+              setCurrentRating(val);
+              showFeedback(<div className="flex flex-col items-center"><TrendingUp size={40} /><span className="text-2xl font-black">{val}</span></div>);
+          } else {
+              // Reset if > 100 (e.g. typing a new number sequence)
+              ratingBufferRef.current = e.key;
+              setCurrentRating(parseInt(e.key));
+              showFeedback(<div className="flex flex-col items-center"><TrendingUp size={40} /><span className="text-2xl font-black">{e.key}</span></div>);
+          }
+
+          ratingTimeoutRef.current = setTimeout(() => {
+              ratingBufferRef.current = "";
+          }, 1500);
+          return;
+      }
 
       // Genre Shortcuts
       const performAddSegment = (type: SceneType) => {
