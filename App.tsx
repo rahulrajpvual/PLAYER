@@ -151,17 +151,10 @@ const WireframeBackground = () => (
 );
 
 // --- Logo Component ---
-const FilmdaLogo = () => (
-  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="40" height="40" rx="12" fill="white"/>
-    <path d="M12 10H28C29.1 10 30 10.9 30 12V28C30 29.1 29.1 30 28 30H12C10.9 30 10 29.1 10 28V12C10 10.9 10.9 10 12 10Z" fill="black"/>
-    <path d="M10 16H30" stroke="white" strokeWidth="2"/>
-    <path d="M10 24H30" stroke="white" strokeWidth="2"/>
-    <path d="M16 10V30" stroke="white" strokeWidth="2"/>
-    <path d="M24 10V30" stroke="white" strokeWidth="2"/>
-    <rect x="18.5" y="12.5" width="3" height="15" fill="white"/>
-    <path d="M20 12L20 28" stroke="black" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
+const FilmdaLogoText = () => (
+  <span className="text-3xl font-[1000] tracking-[-0.08em] leading-none uppercase italic text-white flex items-center">
+    FILMDA<span className="text-indigo-600 ml-[-2px]">.</span>
+  </span>
 );
 
 const App: React.FC = () => {
@@ -175,6 +168,7 @@ const App: React.FC = () => {
   const [folderMap, setFolderMap] = useState<Record<string, string>>({});
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [plannerEntries, setPlannerEntries] = useState<PlannerEntry[]>([]);
+  const [nowPlayingMovies, setNowPlayingMovies] = useState<TopMovie[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -293,6 +287,10 @@ const App: React.FC = () => {
     setPlannerEntries(plans);
     setIsPlannerLoading(false);
 
+    // Load Now Playing from Supabase/TMDB
+    const nowPlaying = await tmdbService.getNowPlayingMovies();
+    setNowPlayingMovies(nowPlaying.results);
+    
     // Load Storyboards from Supabase
     const loaded = await fetchAllStoryboards();
     
@@ -557,11 +555,10 @@ const App: React.FC = () => {
             />
         ) : (
           <div className="flex-1 flex flex-col h-screen">
-            <div className={`fixed top-0 left-0 w-full p-4 md:px-12 md:py-4 flex justify-between items-center z-[100] transition-all duration-500 ${isScrolled ? 'nav-blur py-3' : 'bg-gradient-to-b from-black/80 to-transparent py-6'}`}>
-              <div className="flex items-center gap-10">
+            <div className={`fixed top-0 left-0 w-full p-4 md:px-12 md:py-4 flex justify-between items-center z-[100] transition-all duration-700 ${isScrolled ? 'nav-blur py-3' : 'bg-gradient-to-b from-black/60 to-transparent py-8'}`}>
+              <div className="flex items-center gap-14">
                 <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setActiveTab('home')}>
-                  <FilmdaLogo />
-                  <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-white group-hover:text-indigo-400 transition-colors">FILMDA</h1>
+                  <FilmdaLogoText />
                 </div>
                 
                 <div className="hidden lg:flex items-center gap-6">
@@ -601,80 +598,123 @@ const App: React.FC = () => {
             <div className="flex-1 overflow-y-auto custom-scrollbar pb-12">
               {activeTab === 'home' && (
                 <div className="animate-in fade-in duration-1000">
-                  {/* Hero Section */}
-                  <div className="relative h-[85vh] w-full group overflow-hidden">
+                  <div className="relative h-[90vh] w-full group overflow-hidden">
                     <div className="absolute inset-0">
                       <img 
-                        src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2000&auto=format&fit=crop" 
+                        src={nowPlayingMovies[0]?.poster_path || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2000&auto=format&fit=crop"} 
                         alt="Hero Backdrop"
-                        className="w-full h-full object-cover brightness-[0.6] transition-transform duration-10000 group-hover:scale-110"
+                        className="w-full h-full object-cover brightness-[0.5] transition-transform duration-[20s] group-hover:scale-110"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/20 to-transparent" />
                       <div className="absolute inset-0 netflix-gradient" />
                     </div>
 
-                    <div className="absolute bottom-[20%] left-4 md:left-12 max-w-2xl space-y-6 animate-slide-up">
-                      <div className="flex items-center gap-2">
-                        <span className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase">Original</span>
+                    <div className="absolute bottom-[15%] left-4 md:left-12 max-w-3xl space-y-6 animate-slide-up">
+                      <div className="flex items-center gap-3">
+                        <span className="bg-red-600 text-white text-[10px] font-[1000] px-3 py-1 rounded-sm tracking-[0.2em] uppercase">Cinematic Intelligence</span>
                         <div className="flex gap-1">
-                          {[1,2,3,4,5].map(i => <Star key={i} size={12} fill="currentColor" className="text-yellow-500" />)}
+                          {[1,2,3,4,5].map(i => <Star key={i} size={14} fill="currentColor" className="text-yellow-500" />)}
                         </div>
                       </div>
                       
-                      <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase leading-none italic">
-                        The Cinematic <br/> Analysis <span className="text-indigo-500 underline underline-offset-8">Studio</span>
+                      <h1 className="text-7xl md:text-[9rem] font-[1000] tracking-[-0.06em] uppercase leading-[0.85] text-white">
+                        FRAME <br/> BY <span className="text-indigo-600">FRAME</span>
                       </h1>
                       
-                      <p className="text-lg text-gray-300 font-medium leading-relaxed max-w-lg">
-                        Deconstruct every frame, track every shot, and build your digital cinematic archive with professional-grade analysis tools.
+                      <p className="text-xl text-gray-300 font-bold leading-relaxed max-w-lg tracking-tight">
+                        The ultimate analytical suite for professional filmmakers and cinema enthusiasts. Decode the language of cinema.
                       </p>
 
-                      <div className="flex items-center gap-4 pt-4">
+                      <div className="flex items-center gap-5 pt-6">
                         <button 
                           onClick={() => setIsDragging(true)}
-                          className="bg-white text-black px-10 py-4 rounded-md font-black uppercase tracking-wider flex items-center gap-3 hover:bg-white/90 transition-all scale-100 active:scale-95"
+                          className="bg-white text-black px-12 py-5 rounded-md font-black uppercase tracking-widest flex items-center gap-3 hover:bg-white/90 transition-all scale-100 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.2)]"
                         >
-                          <PlayCircle size={24} fill="currentColor" />
-                          Start Analysis
+                          <PlayCircle size={28} fill="currentColor" />
+                          Initialize Session
                         </button>
                         <button 
                           onClick={() => setActiveTab('calendar')}
-                          className="bg-white/20 backdrop-blur-md text-white px-8 py-4 rounded-md font-black uppercase tracking-wider flex items-center gap-3 hover:bg-white/30 transition-all"
+                          className="bg-white/10 backdrop-blur-3xl text-white border border-white/20 px-10 py-5 rounded-md font-black uppercase tracking-widest flex items-center gap-3 hover:bg-white/20 transition-all"
                         >
-                          <BookOpen size={20} />
-                          Open Journal
+                          <BookOpen size={24} />
+                          Journal
                         </button>
                       </div>
                     </div>
                   </div>
 
                   {/* Scrolling Rows */}
-                  <div className="relative z-20 -mt-32 space-y-12 pb-24">
+                  <div className="relative z-20 -mt-40 space-y-16 pb-32">
+                    {/* Row 0: Now Playing / IMDB Style */}
+                    <div className="pl-4 md:pl-12 space-y-6">
+                      <div className="flex items-end gap-3">
+                        <h3 className="text-2xl font-[1000] tracking-tighter text-white uppercase italic">
+                          Now Streaming
+                        </h3>
+                        <span className="text-indigo-500 font-black text-xs uppercase tracking-widest mb-1 pb-px border-b border-indigo-500/30">Latest Releases</span>
+                      </div>
+                      <div className="flex gap-5 overflow-x-auto pb-10 no-scrollbar pr-12">
+                        {nowPlayingMovies.map((movie, idx) => (
+                          <div 
+                            key={movie.id}
+                            className="netflix-card flex-shrink-0 w-48 md:w-60 aspect-[2/3] bg-[#0a0a0a] rounded-xl overflow-hidden border border-white/5 shadow-[0_20px_40px_rgba(0,0,0,0.6)] group"
+                          >
+                            {idx < 10 && (
+                                <div className="absolute top-0 right-0 z-10 w-12 h-16 bg-red-600/90 backdrop-blur-md flex flex-col items-center justify-center font-[1050] text-white italic clip-path-banner">
+                                    <span className="text-[10px] leading-tight opacity-70">TOP</span>
+                                    <span className="text-2xl leading-none">{idx + 1}</span>
+                                </div>
+                            )}
+                            <img 
+                              src={movie.poster_path} 
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                              alt={movie.title}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-6">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-yellow-500 font-black text-xs flex items-center gap-1"><Star size={12} fill="currentColor" /> {movie.rating}</span>
+                                <span className="bg-white/10 text-[8px] font-black px-2 py-0.5 rounded-full uppercase text-gray-300">4K Ultra HD</span>
+                              </div>
+                              <span className="font-[1000] text-base uppercase leading-tight line-clamp-2 tracking-tight">{movie.title}</span>
+                              <div className="flex gap-2 mt-4">
+                                <button className="flex-1 bg-white text-black text-[10px] font-black uppercase py-2.5 rounded-lg hover:bg-gray-200 transition-colors">Details</button>
+                                <button className="p-2.5 bg-white/10 backdrop-blur-md border border-white/10 rounded-lg hover:bg-white/20 transition-all"><Plus size={16} /></button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* Row 1: Recent Analysis */}
                     {storyboards.length > 0 && (
-                      <div className="pl-4 md:pl-12 space-y-4">
-                        <h3 className="text-xl font-bold tracking-tight text-white/90 flex items-center gap-2">
-                          Recently Analyzed
-                          <ChevronRight size={18} className="text-gray-600" />
+                      <div className="pl-4 md:pl-12 space-y-6">
+                        <h3 className="text-2xl font-black tracking-tighter text-white flex items-center gap-3 uppercase italic">
+                          Analysis Vault
+                          <span className="w-12 h-px bg-white/20"></span>
                         </h3>
-                        <div className="flex gap-4 overflow-x-auto pb-8 no-scrollbar pr-12">
+                        <div className="flex gap-6 overflow-x-auto pb-10 no-scrollbar pr-12">
                           {storyboards.slice(0, 10).map((sb) => (
                             <div 
                               key={sb.filename}
                               onClick={() => setPlayingStoryboard(sb)}
-                              className="netflix-card flex-shrink-0 w-64 md:w-80 h-36 md:h-44 bg-[#141414] rounded-lg overflow-hidden border border-white/5"
+                              className="netflix-card flex-shrink-0 w-72 md:w-96 h-40 md:h-56 bg-[#0a0a0a] rounded-xl overflow-hidden border border-white/5 shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
                             >
                               <img 
                                 src={sb.notes.find(n => n.thumbnail)?.thumbnail || 'https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=400&auto=format&fit=crop'} 
-                                className="w-full h-full object-cover opacity-80"
+                                className="w-full h-full object-cover opacity-60 hover:opacity-100 transition-all duration-700"
                                 alt={sb.filename}
                               />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-                                <span className="text-xs font-black uppercase tracking-wider text-indigo-400 mb-1">{sb.scenes?.length || 0} Scenes</span>
-                                <span className="font-bold text-sm truncate">{formatMovieName(sb.filename)}</span>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <div className="p-1 bg-white rounded-full text-black"><Play size={10} fill="currentColor" /></div>
-                                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Review Storyboard</span>
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="bg-indigo-600 text-[9px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase">{sb.scenes?.length || 0} Cuts</span>
+                                  <span className="bg-white/10 backdrop-blur-md text-[9px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase">{sb.notes?.length || 0} Frames</span>
+                                </div>
+                                <span className="font-black text-lg md:text-xl truncate uppercase tracking-tight">{formatMovieName(sb.filename)}</span>
+                                <div className="flex items-center gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="w-8 h-8 bg-white rounded-full text-black flex items-center justify-center shadow-xl"><Play size={12} fill="currentColor" className="ml-0.5" /></div>
+                                  <span className="text-[10px] text-white font-black uppercase tracking-[0.2em]">Open Analysis</span>
                                 </div>
                               </div>
                             </div>
@@ -683,27 +723,29 @@ const App: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Row 2: Trending / Global Discovery (Library simulated) */}
-                    <div className="pl-4 md:pl-12 space-y-4">
-                      <h3 className="text-xl font-bold tracking-tight text-white/90 flex items-center gap-2">
-                        Global Masterpieces
-                        <ChevronRight size={18} className="text-gray-600" />
+                    {/* Row 2: Global Classics */}
+                    <div className="pl-4 md:pl-12 space-y-6">
+                      <h3 className="text-2xl font-black tracking-tighter text-white flex items-center gap-3 uppercase italic">
+                        Cinephile Archives
+                        <span className="w-12 h-px bg-white/20"></span>
                       </h3>
-                      <div className="flex gap-4 overflow-x-auto pb-8 no-scrollbar pr-12">
-                        {apiMovies.map((movie) => (
+                      <div className="flex gap-5 overflow-x-auto pb-10 no-scrollbar pr-12">
+                        {apiMovies.filter(m => !nowPlayingMovies.find(nm => nm.id === m.id)).map((movie) => (
                           <div 
                             key={movie.id}
-                            className="netflix-card flex-shrink-0 w-40 md:w-48 aspect-[2/3] bg-[#141414] rounded-lg overflow-hidden border border-white/5 shadow-2xl"
+                            className="netflix-card flex-shrink-0 w-44 md:w-56 aspect-[2/3] bg-[#0a0a0a] rounded-xl overflow-hidden border border-white/5 shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
                           >
                             <img 
-                              src={movie.poster_path || 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=400&auto=format&fit=crop'} 
-                              className="w-full h-full object-cover"
+                              src={movie.poster_path} 
+                              className="w-full h-full object-cover hover:scale-110 transition-transform duration-[10s]"
                               alt={movie.title}
                             />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex flex-col justify-end p-4 text-center">
-                              <Star size={16} fill="white" className="mx-auto mb-2 text-yellow-500" />
-                              <span className="font-black text-[10px] uppercase truncate">{movie.title}</span>
-                              <span className="text-[8px] text-indigo-400 font-black mt-1 uppercase tracking-widest">Coming Soon</span>
+                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-all flex flex-col items-center justify-center p-5 text-center">
+                              <div className="w-14 h-14 rounded-full border-2 border-white/30 flex items-center justify-center mb-4 transition-transform group-hover:rotate-12">
+                                <Plus size={24} className="text-white" />
+                              </div>
+                              <span className="font-black text-xs uppercase leading-tight line-clamp-2 mb-2">{movie.title}</span>
+                              <span className="text-[9px] text-indigo-400 font-black uppercase tracking-widest px-3 py-1 bg-white/5 rounded-full">Coming Soon</span>
                             </div>
                           </div>
                         ))}

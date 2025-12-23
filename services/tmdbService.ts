@@ -67,6 +67,20 @@ export const tmdbService = {
     }
   },
 
+  async getNowPlayingMovies(page: number = 1): Promise<{ results: TopMovie[], totalPages: number }> {
+    try {
+      const response = await fetch(`${TMDB_BASE_URL}/movie/now_playing?language=en-US&page=${page}`, { headers });
+      const data = await response.json();
+      return {
+        results: (data.results || []).map(mapTMDBToTopMovie),
+        totalPages: data.total_pages || 1
+      };
+    } catch (error) {
+      console.error('TMDB Now Playing Error:', error);
+      return { results: [], totalPages: 0 };
+    }
+  },
+
   async searchPerson(query: string): Promise<TMDBPerson[]> {
     try {
       const response = await fetch(`${TMDB_BASE_URL}/search/person?query=${encodeURIComponent(query)}&include_adult=false&language=en-US&page=1`, { headers });
