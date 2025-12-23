@@ -2,6 +2,8 @@
 @plugin "tailwindcss-animate";
 
 @theme {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Caveat", ui-serif, Georgia, serif;
   --animate-spin-3d: spin-3d 25s linear infinite;
   --animate-tumble: tumble 18s linear infinite;
   --animate-blob: blob 7s infinite;
@@ -47,4 +49,28 @@
   @apply absolute border border-white/20 bg-indigo-500/5 backdrop-blur-sm box-border;
   transform-origin: 50% 50%;
   backface-visibility: visible;
+}
+
+@utility netflix-gradient {
+  background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+}
+
+@utility netflix-card {
+  @apply relative transition-all duration-350 ease-out cursor-pointer overflow-hidden rounded-md;
+  &:hover {
+    @apply scale-105 z-40 shadow-[0_0_30px_rgba(0,0,0,0.8)];
+  }
+}
+
+@utility nav-blur {
+  @apply backdrop-blur-2xl bg-black/40 border-b border-white/5;
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@utility animate-slide-up {
+  animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
