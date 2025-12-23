@@ -150,6 +150,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
     scalingMode: 'contain'
   });
 
+  const stateRef = useRef(state);
+  const segmentsRef = useRef(segments);
+
+  useEffect(() => { stateRef.current = state; }, [state]);
+  useEffect(() => { segmentsRef.current = segments; }, [segments]);
+
   // Cleanup
   useEffect(() => {
     return () => {
@@ -632,10 +638,33 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       setState(prev => ({...prev, inPoint: null, outPoint: null}));
   };
 
-  const addSceneSegment = (type: SceneType) => {
-      const start = state.inPoint !== null ? state.inPoint : state.currentTime;
-      const end = state.outPoint !== null ? state.outPoint : state.currentTime;
+  const addSceneSegment = useCallback((type: SceneType) => {
+      // Logic used by UI buttons - uses current state/refs to be safe
+      const s = stateRef.current; // Use ref for latest values if called from UI or elsewhere
+      let start = s.inPoint;
+      let end = s.outPoint;
+      const current = videoRef.current?.currentTime || 0;
+
+      // Auto-Gap Logic
+      if (start === null && end === null) {
+          end = current;
+          // Find gap start from last segment
+          const sorted = [...segmentsRef.current].sort((a,b) => b.endTime - a.endTime);
+          const lastEnd = sorted.length > 0 ? sorted[0].endTime : 0;
+          
+          if (lastEnd < end) {
+              start = lastEnd;
+          } else {
+              start = Math.max(0, end - 5); // Default 5s if we jumped around
+          }
+      }
       
+      if (start !== null && end === null) end = current;
+      if (start === null && end !== null) start = 0;
+      
+      start = start ?? 0;
+      end = end ?? 0;
+
       const safeStart = Math.min(start, end);
       const safeEnd = Math.max(start, end);
 
@@ -647,17 +676,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
           rating: currentRating
       };
       
-      const updatedSegments = [...segments, newSeg].sort((a,b) => a.startTime - b.startTime);
+      const updatedSegments = [...segmentsRef.current, newSeg].sort((a,b) => a.startTime - b.startTime);
       setSegments(updatedSegments);
       saveToCloud(`segments_${file.name}`, newSeg);
       
       clearMarks();
-      // Keep current rating as basis for next segment or reset? 
-      // Resetting to neutral 50 feels best for discrete ratings.
       setCurrentRating(50); 
       setIsSidebarOpen(true);
       setActiveSidebarTab('scenes');
-  };
+      showFeedback(<div className="flex flex-col items-center uppercase"><span className="text-2xl font-black">{type}</span><span className="text-xs">Segment Added</span></div>);
+  }, [file.name, currentRating]);
 
   const deleteSegment = (id: string) => {
       setSegments(prev => prev.filter(s => s.id !== id));
@@ -818,41 +846,42 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
   const togglePlay = useCallback(() => {
     initAudioContext();
     if (videoRef.current) {
-      if (state.isPlaying) {
+      if (!videoRef.current.paused) {
         videoRef.current.pause();
         compareVideoRef.current?.pause();
         showFeedback(<Pause size={40} fill="currentColor" />);
+        setState(prev => ({ ...prev, isPlaying: false }));
       } else {
         videoRef.current.play();
         compareVideoRef.current?.play();
         showFeedback(<Play size={40} fill="currentColor" />);
+        setState(prev => ({ ...prev, isPlaying: true }));
       }
-      setState(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
     }
-  }, [state.isPlaying]);
+  }, []);
 
-  const toggleFullscreen = () => {
-      const elem = containerRef.current as any;
-      if (!elem) return;
+  const toggleFullscreen = useCallback(() => {
+    const elem = containerRef.current as any;
+    if (!elem) return;
 
-      if (!document.fullscreenElement && !(document as any).webkitFullscreenElement && !(document as any).mozFullScreenElement && !(document as any).msFullscreenElement) {
-          if (elem.requestFullscreen) {
-              elem.requestFullscreen();
-          } else if (elem.webkitRequestFullscreen) { /* Safari */
-              elem.webkitRequestFullscreen();
-          } else if (elem.msRequestFullscreen) { /* IE11 */
-              elem.msRequestFullscreen();
-          }
-      } else {
-          if (document.exitFullscreen) {
-              document.exitFullscreen();
-          } else if ((document as any).webkitExitFullscreen) { /* Safari */
-              (document as any).webkitExitFullscreen();
-          } else if ((document as any).msExitFullscreen) { /* IE11 */
-              (document as any).msExitFullscreen();
-          }
+    if (!document.fullscreenElement && !(document as any).webkitFullscreenElement && !(document as any).mozFullScreenElement && !(document as any).msFullscreenElement) {
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
       }
-  };
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) { /* Safari */
+        (document as any).webkitExitFullscreen();
+      } else if ((document as any).msExitFullscreen) { /* IE11 */
+        (document as any).msExitFullscreen();
+      }
+    }
+  }, []);
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
@@ -899,12 +928,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       setState(prev => ({ ...prev, volume: v, isMuted: v===0 }));
   };
   
-  const toggleMute = () => {
-    if(videoRef.current) {
-        videoRef.current.muted = !state.isMuted;
-        setState(prev => ({...prev, isMuted: !prev.isMuted}));
+  const toggleMute = useCallback(() => {
+    if (videoRef.current) {
+      const isMuted = !videoRef.current.muted;
+      videoRef.current.muted = isMuted;
+      setState(prev => ({ ...prev, isMuted }));
+      showFeedback(isMuted ? <VolumeX size={40} /> : <Volume2 size={40} />);
     }
-  };
+  }, []);
 
   const handlePlaybackRate = (r: number) => {
       if(videoRef.current) videoRef.current.playbackRate = r;
@@ -917,6 +948,99 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
     setFeedbackIcon(icon);
     setTimeout(() => setFeedbackIcon(null), 600);
   };
+
+  // --- Keyboard Controls ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((document.activeElement?.tagName) || '')) return;
+      if (!videoRef.current) return;
+
+      const key = e.key.toLowerCase();
+
+      // Genre Shortcuts
+      const performAddSegment = (type: SceneType) => {
+          e.preventDefault();
+          addSceneSegment(type);
+      };
+
+      switch(key) {
+        case ' ':
+        case 'k':
+          e.preventDefault();
+          togglePlay();
+          break;
+        
+        // Navigation
+        case 'arrowright':
+        case 'l':
+          e.preventDefault();
+          {
+             const t = Math.min(videoRef.current.duration, videoRef.current.currentTime + (key === 'l' ? 10 : 5));
+             videoRef.current.currentTime = t;
+             if (compareVideoRef.current) compareVideoRef.current.currentTime = t;
+             setState(prev => ({ ...prev, currentTime: t, progress: (t / (videoRef.current?.duration || 1)) * 100 }));
+             showFeedback(<div className="flex flex-col items-center"><ChevronRight size={40} /><span className="text-xl font-bold">+{key === 'l' ? 10 : 5}s</span></div>);
+          }
+          break;
+
+        case 'arrowleft':
+        case 'j':
+          e.preventDefault();
+          {
+             const t = Math.max(0, videoRef.current.currentTime - (key === 'j' ? 10 : 5));
+             videoRef.current.currentTime = t;
+             if (compareVideoRef.current) compareVideoRef.current.currentTime = t;
+             setState(prev => ({ ...prev, currentTime: t, progress: (t / (videoRef.current?.duration || 1)) * 100 }));
+             showFeedback(<div className="flex flex-col items-center"><ChevronRight className="rotate-180" size={40} /><span className="text-xl font-bold">-{key === 'j' ? 10 : 5}s</span></div>);
+          }
+          break;
+
+        case 'arrowup':
+          e.preventDefault();
+          {
+             const v = Math.min(1, videoRef.current.volume + 0.1);
+             videoRef.current.volume = v;
+             setState(prev => ({ ...prev, volume: v, isMuted: v === 0 }));
+             showFeedback(<div className="flex flex-col items-center"><Volume2 size={40} /><span className="text-xl font-bold">{Math.round(v*100)}%</span></div>);
+          }
+          break;
+
+        case 'arrowdown':
+          e.preventDefault();
+          {
+             const v = Math.max(0, videoRef.current.volume - 0.1);
+             videoRef.current.volume = v;
+             setState(prev => ({ ...prev, volume: v, isMuted: v === 0 }));
+             showFeedback(<div className="flex flex-col items-center"><Volume2 size={40} /><span className="text-xl font-bold">{Math.round(v*100)}%</span></div>);
+          }
+          break;
+
+        case 'm':
+          e.preventDefault();
+          toggleMute();
+          break;
+
+        case 'f':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+
+        // Genre Shortcuts Logic
+        case 'a': performAddSegment('action'); break;
+        case 'c': performAddSegment('comedy'); break;
+        case 'd': performAddSegment('drama'); break;
+        case 't': performAddSegment('thriller'); break;
+        case 's': performAddSegment('song'); break;
+        case 'w': performAddSegment('twist'); break; // 'w' for twist
+        case 'h': performAddSegment('horror'); break;
+        case 'r': performAddSegment('romance'); break;
+        case 'v': performAddSegment('dialogue'); break; // 'v' for voice/dialogue
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePlay, toggleFullscreen, toggleMute, addSceneSegment]);
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex overflow-hidden" ref={containerRef}>
