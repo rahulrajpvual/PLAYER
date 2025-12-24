@@ -1189,36 +1189,70 @@ const App: React.FC = () => {
 
               {activeTab === 'analysis' && (
                 <div className="w-full px-8 pt-32 animate-in fade-in slide-in-from-bottom-8 duration-500">
-                    <h2 className="text-3xl font-black mb-8 uppercase tracking-tight">Studio Analytics</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 flex items-center gap-4 shadow-xl"><div className="p-3 bg-indigo-500/20 rounded-xl text-indigo-400"><Layers size={24}/></div><div><div className="text-2xl font-black text-white">{totalFrames}</div><div className="text-xs text-gray-500 font-bold uppercase">Total Frames Logged</div></div></div>
-                        <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 flex items-center gap-4 shadow-xl"><div className="p-3 bg-green-500/20 rounded-xl text-green-400"><Film size={24}/></div><div><div className="text-2xl font-black text-white">{storyboards.length}</div><div className="text-xs text-gray-500 font-bold uppercase">Active Projects</div></div></div>
-                        <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 flex items-center gap-4 shadow-xl"><div className="p-3 bg-pink-500/20 rounded-xl text-pink-400"><Clock size={24}/></div><div><div className="text-2xl font-black text-white">{Math.round(activityLogs.reduce((acc, l) => acc + l.durationPlayed, 0) / 60)}m</div><div className="text-xs text-gray-500 font-bold uppercase">Total Study Time</div></div></div>
+                    <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-6">
+                        <div>
+                            <h2 className="text-xl font-black uppercase tracking-[0.2em] text-white">Studio Analytics</h2>
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Performance Telemetry</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-mono text-indigo-400">
+                            <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"/> LIVE_DATA_FEED
+                        </div>
                     </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/10 border border-white/10 mb-12">
+                        <div className="bg-[#0a0a0a] p-8 flex flex-col justify-between h-32 group hover:bg-[#111] transition-colors">
+                             <div className="flex justify-between items-start">
+                                 <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Total Frames</span>
+                                 <Layers size={16} className="text-gray-600 group-hover:text-white transition-colors"/>
+                             </div>
+                             <div className="text-4xl font-mono font-bold text-white tracking-tighter">{totalFrames}</div>
+                        </div>
+                        <div className="bg-[#0a0a0a] p-8 flex flex-col justify-between h-32 group hover:bg-[#111] transition-colors">
+                             <div className="flex justify-between items-start">
+                                 <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Active Projects</span>
+                                 <Film size={16} className="text-gray-600 group-hover:text-white transition-colors"/>
+                             </div>
+                             <div className="text-4xl font-mono font-bold text-white tracking-tighter">{storyboards.length}</div>
+                        </div>
+                        <div className="bg-[#0a0a0a] p-8 flex flex-col justify-between h-32 group hover:bg-[#111] transition-colors">
+                             <div className="flex justify-between items-start">
+                                 <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Analysis Time</span>
+                                 <Clock size={16} className="text-gray-600 group-hover:text-white transition-colors"/>
+                             </div>
+                             <div className="text-4xl font-mono font-bold text-white tracking-tighter">{Math.round(activityLogs.reduce((acc, l) => acc + l.durationPlayed, 0) / 60)}<span className="text-sm text-gray-500 ml-1">MIN</span></div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-                        <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl">
-                             <div className="flex items-center gap-3 mb-6"><Activity className="text-gray-400" size={20} /><h3 className="text-xl font-black text-gray-200 uppercase tracking-wide">14-Day Activity (Minutes)</h3></div>
-                            <div className="h-64 flex items-end gap-2 border-b border-white/10 pb-4">
+                        <div className="bg-[#0a0a0a] border border-white/5 p-8">
+                             <div className="flex items-center gap-3 mb-8 pb-4 border-b border-white/5">
+                                 <Activity className="text-indigo-500" size={16} />
+                                 <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">14-Day Activity Cycle</h3>
+                             </div>
+                            <div className="h-64 flex items-end gap-2">
                                 {dailyActivity.map((day, idx) => (
                                     <div key={idx} className="flex-1 flex flex-col items-center gap-2 group relative">
-                                        <div className="w-full bg-indigo-600/40 hover:bg-indigo-500 rounded-t-sm transition-all" style={{ height: `${Math.max(5, Math.min(100, (day.minutes / 120) * 100))}%` }}></div>
-                                        <div className="text-[10px] font-bold text-gray-600 truncate w-full text-center">{day.date.split(',')[0]}</div>
-                                        <div className="absolute bottom-full mb-1 opacity-0 group-hover:opacity-100 text-[10px] bg-white text-black px-1 rounded font-bold">{day.minutes}m</div>
+                                        <div className="w-full bg-indigo-500/20 group-hover:bg-indigo-500 transition-all border-t border-indigo-500/50" style={{ height: `${Math.max(5, Math.min(100, (day.minutes / 120) * 100))}%` }}></div>
+                                        <div className="text-[8px] font-mono text-gray-600 truncate w-full text-center group-hover:text-white transition-colors">{day.date.split(',')[0]}</div>
+                                        <div className="absolute bottom-full mb-1 opacity-0 group-hover:opacity-100 text-[9px] bg-white text-black px-1 py-0.5 font-bold">{day.minutes}m</div>
                                     </div>
                                 ))}
                             </div>
                         </div>
-                        <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl">
-                             <div className="flex items-center gap-3 mb-6"><Clock className="text-gray-400" size={20} /><h3 className="text-xl font-black text-gray-200 uppercase tracking-wide">Study Habits (Time of Day)</h3></div>
-                            <div className="h-64 flex items-end gap-1 pb-4">
+                        <div className="bg-[#0a0a0a] border border-white/5 p-8">
+                             <div className="flex items-center gap-3 mb-8 pb-4 border-b border-white/5">
+                                 <Clock className="text-indigo-500" size={16} />
+                                 <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Temporal Distribution</h3>
+                             </div>
+                            <div className="h-64 flex items-end gap-1">
                                 {watchPatterns.map((val, idx) => (
                                     <div key={idx} className="flex-1 flex flex-col items-center group relative">
-                                        <div className="w-full bg-white/10 hover:bg-white/30 rounded-t-sm transition-all" style={{ height: `${Math.max(2, val)}%` }}></div>
-                                        {idx % 3 === 0 && <div className="text-[9px] font-bold text-gray-600 mt-1">{idx}:00</div>}
+                                        <div className="w-full bg-white/5 group-hover:bg-white/20 transition-all" style={{ height: `${Math.max(2, val)}%` }}></div>
+                                        {idx % 4 === 0 && <div className="text-[8px] font-mono text-gray-700 mt-2">{idx.toString().padStart(2,'0')}</div>}
                                     </div>
                                 ))}
                             </div>
-                            <div className="text-center text-xs text-gray-500 font-bold mt-2">Hour of Day (0-24)</div>
+                            <div className="text-right text-[9px] text-gray-600 font-bold mt-4 uppercase tracking-widest">Hour (24H)</div>
                         </div>
                     </div>
                 </div>
@@ -1546,42 +1580,42 @@ const App: React.FC = () => {
 
               {activeTab === 'ideas' && (
                   <div className="w-full px-8 pt-24 pb-20 max-w-7xl mx-auto">
-                      <div className="flex items-center justify-between mb-12 border-b border-white/5 pb-8">
+                      <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/10">
                           <div>
-                            <h2 className="text-sm font-black text-white uppercase tracking-[0.3em]">Story Repository</h2>
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Version 2.4.0-Alpha | Encrypted Local Cache</p>
+                            <h2 className="text-sm font-black text-white uppercase tracking-[0.3em]">Concept Repository</h2>
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Encrypted Local Storage // v2.4.0</p>
                           </div>
                           <button 
                             onClick={() => setIsAddingIdea(true)}
-                            className="bg-white text-black hover:bg-gray-200 px-6 py-2.5 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] transition-all flex items-center gap-3 active:scale-95"
+                            className="bg-white text-black hover:bg-gray-200 px-6 py-2 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] transition-all flex items-center gap-3 active:scale-95 border border-white"
                           >
-                               <Plus size={14} strokeWidth={3} /> Register New Conceptual Asset
+                               <Plus size={14} strokeWidth={3} /> New Asset
                           </button>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10 border border-white/10">
                           {storyIdeas.map(idea => (
-                              <div key={idea.id} className="bg-[#0a0a0a] border border-white/5 rounded-lg p-8 hover:border-white/10 transition-all group relative overflow-hidden">
+                              <div key={idea.id} className="bg-[#0a0a0a] p-8 hover:bg-[#111] transition-all group relative">
                                   <div className="flex justify-between items-center mb-6">
                                       <div className="flex items-center gap-3">
-                                          <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                                          <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">{idea.id.split('-')[0]}</span>
+                                          <div className="w-1.5 h-1.5 rounded-sm bg-indigo-500" />
+                                          <span className="text-[9px] font-mono text-gray-600">{idea.id.split('-')[0]}</span>
                                       </div>
                                       <button 
                                         onClick={() => handleDeleteIdea(idea.id)}
-                                        className="text-gray-700 hover:text-white transition-colors p-1"
+                                        className="text-gray-700 hover:text-red-500 transition-colors p-1"
                                       >
                                           <X size={14} />
                                       </button>
                                   </div>
-                                  <h3 className="text-sm font-black text-white uppercase tracking-tight mb-4 group-hover:text-indigo-400 transition-colors duration-500">{idea.title}</h3>
-                                  <p className="text-gray-500 text-[11px] font-bold leading-relaxed mb-8 line-clamp-3">
+                                  <h3 className="text-sm font-black text-white uppercase tracking-tight mb-4 group-hover:text-indigo-400 transition-colors">{idea.title}</h3>
+                                  <p className="text-gray-500 text-[11px] font-mono leading-relaxed mb-6 line-clamp-3">
                                       {idea.description}
                                   </p>
-                                  <div className="flex flex-wrap gap-x-3 gap-y-2">
+                                  <div className="flex flex-wrap gap-2">
                                       {idea.tags.map(tag => (
-                                          <span key={tag} className="text-[8px] font-black uppercase text-gray-600 tracking-wider flex items-center gap-1.5">
-                                              <span className="w-1 h-1 bg-white/10 rounded-full" /> {tag}
+                                          <span key={tag} className="text-[8px] font-black uppercase text-gray-400 bg-white/5 px-2 py-1 tracking-wider border border-white/5">
+                                              {tag}
                                           </span>
                                       ))}
                                   </div>
@@ -1589,84 +1623,80 @@ const App: React.FC = () => {
                           ))}
 
                           {storyIdeas.length === 0 && !isIdeasLoading && (
-                              <div className="col-span-full py-32 flex flex-col items-center justify-center bg-[#121212]/50 border-2 border-dashed border-white/5 rounded-[2.5rem]">
-                                  <div className="bg-white/5 w-20 h-20 rounded-full flex items-center justify-center mb-6">
-                                      <Lightbulb size={32} className="text-gray-700" />
+                              <div className="col-span-full py-32 flex flex-col items-center justify-center bg-[#0a0a0a]">
+                                  <div className="bg-white/5 w-16 h-16 flex items-center justify-center mb-6">
+                                      <Lightbulb size={24} className="text-gray-700" />
                                   </div>
-                                  <p className="text-gray-500 font-black uppercase tracking-widest text-sm">No ideas saved yet</p>
+                                  <p className="text-gray-600 font-bold uppercase tracking-widest text-xs">Repository Empty</p>
                                   <button 
                                     onClick={() => setIsAddingIdea(true)}
-                                    className="mt-6 text-indigo-500 font-black uppercase text-xs tracking-widest hover:text-indigo-400 transition-all underline underline-offset-8"
+                                    className="mt-6 text-indigo-500 font-black uppercase text-[10px] tracking-widest hover:text-white transition-colors"
                                   >
-                                    Create your first concept
+                                    [ Initialize First Concept ]
                                   </button>
                               </div>
                           )}
                       </div>
 
-                      {/* Add Idea Modal */}
+                      {/* Add Idea Modal: Technical Variant */}
                       {isAddingIdea && (
-                          <div className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-2xl flex items-center justify-center p-6 animate-in fade-in duration-300">
-                              <div className="bg-[#0a0a0a] border border-white/10 w-full max-w-xl rounded-[2.5rem] p-10 shadow-[0_50px_100px_rgba(0,0,0,0.9)] relative overflow-hidden">
-                                  <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-[100px] rounded-full" />
-                                  
-                                  <div className="flex items-center gap-4 mb-8">
-                                      <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
-                                          <Lightbulb size={24} />
+                          <div className="fixed inset-0 z-[300] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
+                              <div className="bg-black border border-white/20 w-full max-w-lg p-0 shadow-2xl">
+                                  <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#080808]">
+                                      <div className="flex items-center gap-3">
+                                          <div className="w-2 h-2 bg-indigo-500 animate-pulse"/>
+                                          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">New Concept Entry</h3>
                                       </div>
-                                      <div>
-                                          <h3 className="text-2xl font-[1000] uppercase tracking-tighter italic text-white leading-none">New Story Concept</h3>
-                                          <span className="text-gray-500 font-black text-[10px] uppercase tracking-widest">Architect of narratives</span>
-                                      </div>
+                                      <div className="text-[9px] font-mono text-gray-500">SYS_ID: {Math.floor(Math.random()*10000)}</div>
                                   </div>
-
-                                  <div className="space-y-6 relative z-10">
-                                      <div>
-                                          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Concept Title</label>
+                                  
+                                  <div className="p-8 space-y-6">
+                                      <div className="space-y-2">
+                                          <label className="text-[9px] font-black uppercase tracking-widest text-gray-500">Title Designation</label>
                                           <input 
                                             autoFocus
                                             type="text" 
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-black uppercase text-sm placeholder:text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
-                                            placeholder="The Neon Wanderer..."
+                                            className="w-full bg-[#121212] border border-white/10 p-3 text-white font-mono text-xs focus:outline-none focus:border-indigo-500 transition-colors uppercase"
                                             value={newIdea.title}
                                             onChange={(e) => setNewIdea({...newIdea, title: e.target.value})}
+                                            placeholder="ENTER_TITLE..."
                                           />
                                       </div>
-                                      <div>
-                                          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Narrative Description</label>
+                                      <div className="space-y-2">
+                                          <label className="text-[9px] font-black uppercase tracking-widest text-gray-500">Description Data</label>
                                           <textarea 
-                                            rows={5}
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-medium text-sm placeholder:text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all resize-none"
-                                            placeholder="In a world where memories are currency..."
+                                            rows={6}
+                                            className="w-full bg-[#121212] border border-white/10 p-3 text-white font-mono text-xs focus:outline-none focus:border-indigo-500 transition-colors resize-none"
                                             value={newIdea.description}
                                             onChange={(e) => setNewIdea({...newIdea, description: e.target.value})}
+                                            placeholder="> Input narrative parameters..."
                                           />
                                       </div>
-                                      <div>
-                                          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Tags (comma separated)</label>
+                                      <div className="space-y-2">
+                                          <label className="text-[9px] font-black uppercase tracking-widest text-gray-500">Tags (CSV)</label>
                                           <input 
                                             type="text" 
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-bold text-xs placeholder:text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
-                                            placeholder="Sci-Fi, Noir, Emotional..."
+                                            className="w-full bg-[#121212] border border-white/10 p-3 text-white font-mono text-xs focus:outline-none focus:border-indigo-500 transition-colors uppercase"
                                             value={newIdea.tags}
                                             onChange={(e) => setNewIdea({...newIdea, tags: e.target.value})}
+                                            placeholder="SCI-FI, NOIR,..."
                                           />
                                       </div>
-                                      
-                                      <div className="flex gap-4 pt-4">
-                                          <button 
-                                            onClick={handleAddIdea}
-                                            className="flex-1 bg-white text-black py-4 rounded-2xl font-[1000] uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-gray-200 transition-all active:scale-95"
-                                          >
-                                              Forge Concept
-                                          </button>
-                                          <button 
-                                            onClick={() => { setIsAddingIdea(false); setNewIdea({ title: "", description: "", tags: "" }); }}
-                                            className="flex-1 bg-white/5 text-gray-400 py-4 rounded-2xl font-[1000] uppercase text-xs tracking-[0.2em] hover:bg-white/10 transition-all"
-                                          >
-                                              Discard
-                                          </button>
-                                      </div>
+                                  </div>
+
+                                  <div className="p-4 bg-[#080808] border-t border-white/10 flex gap-4">
+                                      <button 
+                                        onClick={handleAddIdea}
+                                        className="flex-1 bg-white text-black py-3 font-black uppercase text-[10px] tracking-[0.2em] hover:bg-indigo-500 hover:text-white transition-all"
+                                      >
+                                          Commit Entry
+                                      </button>
+                                      <button 
+                                        onClick={() => { setIsAddingIdea(false); setNewIdea({ title: "", description: "", tags: "" }); }}
+                                        className="flex-1 bg-transparent border border-white/10 text-gray-400 py-3 font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/5 hover:text-white transition-all"
+                                      >
+                                          Abort
+                                      </button>
                                   </div>
                               </div>
                           </div>
@@ -1675,51 +1705,73 @@ const App: React.FC = () => {
               )}
               {activeTab === 'movies' && (
                   <div className="w-full px-8 pt-32 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-20">
-                      <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-3xl font-black uppercase tracking-tight">Media Library</h2>
-                        <div className="flex gap-2"><button className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"><CalendarIcon size={18} /></button><button className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"><Star size={18} /></button></div>
+                      <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-6">
+                        <div>
+                             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">Media Library</h2>
+                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Stored Visual Assets</p>
+                        </div>
+                        <div className="flex gap-px bg-[#121212] border border-white/10 rounded-sm">
+                            <button className="p-2 hover:bg-white/10 text-gray-400 hover:text-white transition-colors border-r border-white/10"><CalendarIcon size={14} /></button>
+                            <button className="p-2 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"><Star size={14} /></button>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                           {storyboards.map(movie => {
                               const poster = movie.notes.find(n => n.thumbnail)?.thumbnail;
                               return (
-                                  <div key={movie.filename} onClick={() => setPlayingStoryboard(movie)} className="group relative bg-[#121212] rounded-xl overflow-hidden border border-white/5 hover:border-white/20 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer">
-                                      <div className="aspect-[2/3] bg-black relative">
-                                          {poster ? <img src={poster} alt={movie.filename} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" /> : <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-700"><Clapperboard size={40} /></div>}
-                                          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
-                                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30"><MonitorPlay size={24} fill="white" /></div>
+                                  <div key={movie.filename} onClick={() => setPlayingStoryboard(movie)} className="group relative bg-[#0a0a0a] border border-white/10 hover:border-indigo-500/50 transition-all cursor-pointer">
+                                      <div className="aspect-[2/3] bg-black relative overflow-hidden">
+                                          {poster ? (
+                                             <img src={poster} alt={movie.filename} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 grayscale group-hover:grayscale-0 transition-all duration-500" />
+                                          ) : (
+                                              <div className="w-full h-full flex items-center justify-center bg-[#111] text-gray-800">
+                                                  <Clapperboard size={32} />
+                                              </div>
+                                          )}
+                                          
+                                          {/* Technical Overlay */}
+                                          <div className="absolute inset-0 bg-[#0a0a0a]/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-4">
+                                              <div className="flex justify-between items-start">
+                                                  <div className="px-1.5 py-0.5 bg-indigo-500 text-white text-[8px] font-black uppercase tracking-widest">
+                                                      OPEN
+                                                  </div>
+                                              </div>
+                                              <div>
+                                                  <p className="text-[8px] font-mono text-indigo-400 mb-1">ID: {movie.id.substring(0,8)}</p>
+                                                  <div className="h-px w-full bg-indigo-500/30 mb-2" />
+                                                  <div className="flex items-center gap-1.5 text-white text-[9px] font-bold uppercase tracking-wider">
+                                                       <MonitorPlay size={10} /> ACCESS
+                                                  </div>
+                                              </div>
                                           </div>
-                                          <button 
-                                            onClick={(e) => { e.stopPropagation(); handleDeleteStoryboard(movie.filename); }}
-                                            className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-red-600/80 backdrop-blur-md rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all border border-white/10"
-                                          >
-                                              <Trash2 size={16} />
-                                          </button>
                                       </div>
-                                      <div className="p-4">
-                                          <h3 className="font-black text-white truncate mb-1 uppercase tracking-wide" title={movie.filename}>
+                                      <div className="p-4 border-t border-white/5 bg-[#050505]">
+                                          <h3 className="font-bold text-white text-[10px] truncate mb-1 uppercase tracking-widest" title={movie.filename}>
                                             {formatMovieName(movie.filename)}
                                           </h3>
-                                          <div className="flex items-center justify-between text-xs text-gray-500 font-bold"><span>{new Date(movie.lastModified).getFullYear()}</span><div className="flex items-center gap-1"><Layers size={12} /> {movie.notes.length}</div></div>
+                                          <div className="flex items-center justify-between text-[8px] text-gray-600 font-mono">
+                                              <span>{new Date(movie.lastModified).getFullYear()}</span>
+                                              <span>{movie.notes.length} SEGS</span>
+                                          </div>
                                       </div>
                                   </div>
                               )
                           })}
                           {storyboards.length === 0 && (
                             <div className="col-span-full py-20 text-center text-gray-500 flex flex-col items-center">
-                                <Clapperboard size={48} className="mx-auto mb-4 opacity-20" />
-                                <p className="font-medium mb-6">No movies in library.</p>
+                                <Clapperboard size={32} className="mx-auto mb-4 opacity-20" />
+                                <p className="font-mono text-xs uppercase tracking-widest mb-6">Database Empty</p>
                                 
-                                <div className="bg-[#1a1a1a] p-6 rounded-xl border border-white/10 max-w-md w-full">
-                                    <h3 className="text-white font-bold mb-2">Missing your data?</h3>
-                                    <p className="text-sm text-gray-400 mb-4">You switched to Cloud Storage. Your previous work is saved locally on this device.</p>
+                                <div className="bg-[#0a0a0a] p-6 border border-white/5 max-w-md w-full">
+                                    <h3 className="text-white font-black uppercase text-xs tracking-widest mb-2">Data Sync Required</h3>
+                                    <p className="text-[10px] text-gray-400 mb-4 font-mono">Legacy local assets detected in disconnected storage sector.</p>
                                     <button 
                                         onClick={handleMigration} 
                                         disabled={isMigrating}
-                                        className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-full font-bold uppercase text-xs tracking-widest transition-all flex items-center gap-2 mx-auto shadow-lg shadow-indigo-500/20"
+                                        className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 font-black uppercase text-[9px] tracking-[0.2em] transition-all w-full text-center"
                                     >
-                                        {isMigrating ? <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Migrating...</> : <><Database size={14} /> Migrate Local Data to Cloud</>}
+                                        {isMigrating ? "PROCESSING..." : "INITIATE CLOUD MIGRATION"}
                                     </button>
                                 </div>
                             </div>
