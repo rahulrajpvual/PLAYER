@@ -110,7 +110,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       palette: string[];
       histogram: { r: number, g: number, b: number }[]; // 10 buckets
       luminance: number;
-  }>({ palette: [], histogram: [], luminance: 0 });
+      avg: string[];
+  }>({ palette: [], histogram: [], luminance: 0, avg: [] });
   const graphHistoryRef = useRef<number[]>(new Array(60).fill(0)); // Store last 60 frames of luminance
 
   // Pixel Loupe State
@@ -1729,7 +1730,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                         <div className="bg-[#0a0a0a] p-4 rounded-none border border-white/5">
                             <h4 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest">Color Histogram</h4>
                             <div className="flex h-12 gap-px mb-2 overflow-hidden rounded-none bg-black/40">
-                                 {realtimeColors.avg.map((c, i) => (
+                                 {(realtimeColors.avg || []).map((c, i) => (
                                      <div key={i} className="flex-1" style={{ backgroundColor: c }} title={c} />
                                  ))}
                              </div>
