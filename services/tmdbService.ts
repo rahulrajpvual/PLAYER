@@ -97,14 +97,12 @@ export const tmdbService = {
       const response = await fetch(`${TMDB_BASE_URL}/person/${personId}/movie_credits?language=en-US`, { headers });
       const data = await response.json();
       
-      // Filter for Director jobs primarily, then maybe include Producer/Writer if needed?
-      // For now, let's just get the "crew" where job is "Director"
       const directedMovies = (data.crew || [])
         .filter((m: TMDBMovie) => m.job === 'Director')
         .sort((a: TMDBMovie, b: TMDBMovie) => {
           const dateA = a.release_date || '0';
           const dateB = b.release_date || '0';
-          return dateB.localeCompare(dateA); // Newest first
+          return dateB.localeCompare(dateA);
         });
 
       return directedMovies.map(mapTMDBToTopMovie);
@@ -112,5 +110,18 @@ export const tmdbService = {
       console.error('TMDB Credits Error:', error);
       return [];
     }
+  },
+
+  async getPosterByFilename(filename: string): Promise<TopMovie | null> {
+    // Clean filename: remove extension, common scene tags, and replace dots/underscores with spaces
+    let cleanName = filename.replace(/\.[^/.]+$/, "") // remove extension
+        .replace(/(\.|\_)/g, " ") // replace . or _ with space
+        .replace(/\b(1080p|720p|4k|2160p|x264|x265|bluray|web-dl|hdtv|internal|dual-audio|hevc|multi|aac|dts)\b/gi, "") // remove tags
+        .replace(/\b(19|20)\d{2}\b/g, "") // remove year (e.g. 2024)
+        .replace(/\s+/g, " ") // collapse spaces
+        .trim();
+
+    const search = await this.searchMovies(cleanName);
+    return search.results[0] || null;
   }
 };

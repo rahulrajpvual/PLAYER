@@ -170,6 +170,9 @@ const App: React.FC = () => {
   const [plannerEntries, setPlannerEntries] = useState<PlannerEntry[]>([]);
   const [nowPlayingMovies, setNowPlayingMovies] = useState<TopMovie[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [recentlyWatched, setRecentlyWatched] = useState<TopMovie[]>([]);
+  const [isRecentlyWatchedLoading, setIsRecentlyWatchedLoading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -233,6 +236,33 @@ const App: React.FC = () => {
         setIsMigrating(false);
     }
   };
+
+  // Recently Watched Tracking
+  const addToRecentlyWatched = useCallback((filename: string) => {
+    const existing = JSON.parse(localStorage.getItem('lumina_recently_watched') || '[]');
+    const updated = [filename, ...existing.filter((f: string) => f !== filename)].slice(0, 20);
+    localStorage.setItem('lumina_recently_watched', JSON.stringify(updated));
+  }, []);
+
+  useEffect(() => {
+    const loadRecentlyWatched = async () => {
+        const watched = JSON.parse(localStorage.getItem('lumina_recently_watched') || '[]');
+        if (watched.length > 0) {
+            setIsRecentlyWatchedLoading(true);
+            const posters: TopMovie[] = [];
+            // Get unique posters for the last 10 watched items
+            for (const filename of watched.slice(0, 10)) {
+                const movie = await tmdbService.getPosterByFilename(filename);
+                if (movie && !posters.find(p => p.id === movie.id)) {
+                    posters.push({ ...movie, title: formatMovieName(filename).split('|')[0].trim() });
+                }
+            }
+            setRecentlyWatched(posters);
+            setIsRecentlyWatchedLoading(false);
+        }
+    };
+    loadRecentlyWatched();
+  }, []);
 
   const handleUpdateNote = async (filename: string, noteId: string, text: string) => {
     // Update local state for the currently playing storyboard
@@ -364,12 +394,18 @@ const App: React.FC = () => {
     e.preventDefault(); setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile.type.startsWith('video/')) setFile(droppedFile);
-      else alert("Please upload a valid video file.");
+      if (droppedFile.type.startsWith('video/')) {
+          setFile(droppedFile);
+          addToRecentlyWatched(droppedFile.name);
+      } else alert("Please upload a valid video file.");
     }
-  }, []);
+  }, [addToRecentlyWatched]);
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0] && e.target.files[0].type.startsWith('video/')) setFile(e.target.files[0]);
+    if (e.target.files && e.target.files[0] && e.target.files[0].type.startsWith('video/')) {
+        const selected = e.target.files[0];
+        setFile(selected);
+        addToRecentlyWatched(selected.name);
+    }
   };
 
   const getPlatformIcon = (platform?: string) => {
@@ -687,7 +723,51 @@ const App: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Row 1: Recent Analysis */}
+                    {/* Row 1: Recently Watched (Dynamic TMDB) */}
+                    {recentlyWatched.length > 0 && (
+                        <div className="pl-4 md:pl-12 space-y-6">
+                            <div className="flex items-end gap-3">
+                                <h3 className="text-2xl font-[1000] tracking-tighter text-white uppercase italic">
+                                    Recently Watched
+                                </h3>
+                                <span className="text-pink-500 font-black text-xs uppercase tracking-widest mb-1 pb-px border-b border-pink-500/30">Continue Analysis</span>
+                            </div>
+                            <div className="flex gap-5 overflow-x-auto pb-10 no-scrollbar pr-12">
+                                {recentlyWatched.map((movie) => (
+                                    <div 
+                                        key={movie.id}
+                                        className="netflix-card flex-shrink-0 w-44 md:w-56 aspect-[2/3] bg-[#0a0a0a] rounded-xl overflow-hidden border border-white/5 shadow-[0_20px_40px_rgba(0,0,0,0.6)] group cursor-pointer"
+                                    >
+                                        {movie.poster_path ? (
+                                            <img 
+                                                src={movie.poster_path} 
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                alt={movie.title}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-gray-900 to-black">
+                                                <Clapperboard size={48} className="text-gray-800 mb-4" />
+                                                <span className="text-[10px] font-black uppercase text-gray-500">{movie.title}</span>
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-6">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-yellow-500 font-black text-xs flex items-center gap-1"><Star size={12} fill="currentColor" /> {movie.rating}</span>
+                                                <span className="bg-white/10 text-[8px] font-black px-2 py-0.5 rounded-full uppercase text-gray-300">WATCHED</span>
+                                            </div>
+                                            <span className="font-[1000] text-sm uppercase leading-tight line-clamp-2 tracking-tight">{movie.title}</span>
+                                            <div className="flex gap-2 mt-4">
+                                                <button className="flex-1 bg-white text-black text-[10px] font-black uppercase py-2.5 rounded-lg hover:bg-gray-200 transition-colors">Play</button>
+                                                <button className="p-2.5 bg-white/10 backdrop-blur-md border border-white/10 rounded-lg hover:bg-white/20 transition-all"><BarChart3 size={16} /></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Row 2: Recent Analysis */}
                     {storyboards.length > 0 && (
                       <div className="pl-4 md:pl-12 space-y-6">
                         <h3 className="text-2xl font-black tracking-tighter text-white flex items-center gap-3 uppercase italic">
@@ -1240,7 +1320,10 @@ const App: React.FC = () => {
 
                         <div className="relative group p-1">
                             <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                            <div className="relative bg-black rounded-[2.4rem] border border-white/10 p-16 md:p-24 flex flex-col items-center justify-center gap-8 transition-all">
+                            <div 
+                                className="relative bg-black rounded-[2.4rem] border border-white/10 p-16 md:p-24 flex flex-col items-center justify-center gap-8 transition-all cursor-pointer hover:bg-white/[0.02]"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
                                 <div className="w-24 h-24 rounded-full bg-indigo-500 flex items-center justify-center text-white shadow-[0_0_50px_rgba(99,102,241,0.5)] animate-pulse">
                                     <Upload size={40} strokeWidth={3} />
                                 </div>
@@ -1254,8 +1337,9 @@ const App: React.FC = () => {
                                     <input 
                                         type="file" 
                                         accept="video/*" 
+                                        ref={fileInputRef}
                                         onChange={(e) => { handleFileSelect(e); setIsDragging(false); }}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" 
+                                        className="hidden" 
                                     />
                                     <button className="bg-white text-black px-12 py-4 rounded-full font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl">
                                         Browse Files
