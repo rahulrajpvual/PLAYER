@@ -18,7 +18,7 @@ interface VideoPlayerProps {
 
 type SidebarTab = 'storyboard' | 'scenes' | 'monitor';
 
-const SCENE_TYPES: SceneType[] = ['action', 'comedy', 'drama', 'thriller', 'song', 'twist', 'horror', 'romance', 'dialogue'];
+const SCENE_TYPES: SceneType[] = ['action', 'comedy', 'drama', 'thriller', 'song', 'twist', 'horror', 'romance', 'dialogue', 'suspense', 'sci-fi', 'technical', 'montage', 'musical', 'mystery', 'bg-score'];
 
 const formatTimecode = (seconds: number) => {
   if (isNaN(seconds)) return "00:00:00";
@@ -1248,7 +1248,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
         case 'h': performTrigger('horror'); break;
         case 'r': performTrigger('romance'); break;
         case 'v': performTrigger('dialogue'); break; 
-
+        case 'u': performTrigger('suspense'); break;
+        case 'i': performTrigger('sci-fi'); break;
+        case 'z': performTrigger('technical'); break;
+        case 'e': performTrigger('montage'); break;
+        case 'n': performTrigger('musical'); break;
+        case 'q': performTrigger('mystery'); break;
+        case 'b': performTrigger('bg-score'); break;
         case 'p':
           e.preventDefault();
           addNote();
@@ -1270,7 +1276,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlay, toggleFullscreen, toggleMute, addSceneSegment]);
+  }, [togglePlay, toggleFullscreen, toggleMute, addSceneSegment, pendingSegment, finalizePendingSegment, triggerSceneSegment, addNote, handleExportClip]);
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex overflow-hidden" ref={containerRef}>
@@ -1578,13 +1584,55 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
 
                         <div className="grid grid-cols-3 gap-2">
                             {SCENE_TYPES.map(type => (
-                                <button 
-                                    key={type}
-                                    onClick={() => addSceneSegment(type)}
-                                    className="group/btn px-2 py-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-lg flex flex-col items-center gap-1 transition-all active:scale-95 overflow-hidden relative"
-                                >
-                                     <div className={`w-2 h-2 rounded-full transition-shadow group-hover/btn:shadow-[0_0_8px_currentColor] ${type === 'action' ? 'bg-red-500' : type === 'drama' ? 'bg-blue-500' : 'bg-gray-400'}`} />
-                                     <span className="text-[9px] font-bold uppercase text-gray-400 group-hover/btn:text-white transition-colors">{type}</span>
+                                    <button 
+                                        key={type}
+                                        onClick={() => addSceneSegment(type)}
+                                        className="group/btn px-2 py-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-lg flex flex-col items-center gap-1 transition-all active:scale-95 overflow-hidden relative"
+                                    >
+                                         <div 
+                                           className="w-2 h-2 rounded-full transition-shadow group-hover/btn:shadow-[0_0_8px_currentColor]" 
+                                           style={{ 
+                                             backgroundColor: 
+                                               type === 'action' ? '#ef4444' : 
+                                               type === 'comedy' ? '#eab308' : 
+                                               type === 'drama' ? '#3b82f6' : 
+                                               type === 'thriller' ? '#8b5cf6' : 
+                                               type === 'twist' ? '#d946ef' : 
+                                               type === 'song' ? '#ec4899' : 
+                                               type === 'horror' ? '#22c55e' : 
+                                               type === 'romance' ? '#f43f5e' : 
+                                               type === 'suspense' ? '#f97316' :
+                                               type === 'sci-fi' ? '#06b6d4' :
+                                               type === 'technical' ? '#64748b' :
+                                               type === 'montage' ? '#84cc16' :
+                                               type === 'musical' ? '#6366f1' :
+                                               type === 'mystery' ? '#10b981' :
+                                               type === 'bg-score' ? '#f59e0b' :
+                                               type === 'dialogue' ? '#f8fafc' :
+                                               '#ffffff'
+                                           }} 
+                                         />
+                                         <span className="text-[9px] font-bold uppercase text-gray-400 group-hover/btn:text-white transition-colors">{type}</span>
+                                         <span className="absolute top-1 right-1 text-[7px] font-black text-white/20 group-hover/btn:text-indigo-400 transition-colors uppercase">
+                                            {
+                                              type === 'action' ? 'A' :
+                                              type === 'comedy' ? 'C' :
+                                              type === 'drama' ? 'D' :
+                                              type === 'thriller' ? 'T' :
+                                              type === 'song' ? 'S' :
+                                              type === 'twist' ? 'W' :
+                                              type === 'horror' ? 'H' :
+                                              type === 'romance' ? 'R' :
+                                              type === 'dialogue' ? 'V' :
+                                              type === 'suspense' ? 'U' :
+                                              type === 'sci-fi' ? 'I' :
+                                              type === 'technical' ? 'Z' :
+                                              type === 'montage' ? 'E' :
+                                              type === 'musical' ? 'N' :
+                                              type === 'mystery' ? 'Q' :
+                                              type === 'bg-score' ? 'B' : ''
+                                            }
+                                         </span>
                                      <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                                 </button>
                             ))}

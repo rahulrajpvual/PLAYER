@@ -78,7 +78,7 @@ export interface Shot {
   motionScore?: number; // 0-1 for heatmap
 }
 
-export type SceneType = 'action' | 'comedy' | 'drama' | 'thriller' | 'song' | 'twist' | 'horror' | 'romance' | 'dialogue';
+export type SceneType = 'action' | 'comedy' | 'drama' | 'thriller' | 'song' | 'twist' | 'horror' | 'romance' | 'dialogue' | 'suspense' | 'sci-fi' | 'technical' | 'montage' | 'musical' | 'mystery' | 'bg-score';
 
 export interface SceneSegment {
   id: string;

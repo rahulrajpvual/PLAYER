@@ -61,6 +61,14 @@ const getGenreColor = (type: string) => {
     case 'song': return '#ec4899'; // Pink
     case 'horror': return '#22c55e'; // Green
     case 'romance': return '#f43f5e'; // Rose
+    case 'dialogue': return '#f8fafc'; // Slate 50
+    case 'suspense': return '#f97316'; // Orange
+    case 'sci-fi': return '#06b6d4'; // Cyan
+    case 'technical': return '#64748b'; // Slate 500
+    case 'montage': return '#84cc16'; // Lime
+    case 'musical': return '#6366f1'; // Indigo
+    case 'mystery': return '#10b981'; // Emerald
+    case 'bg-score': return '#f59e0b'; // Amber
     default: return '#ffffff';
   }
 };
@@ -270,6 +278,30 @@ const VideoControls: React.FC<VideoControlsProps> = ({
               {hoverTime}
             </div>
           )}
+
+          {/* Cinematic Intensity Graph (Rating) */}
+          <div className="absolute -top-16 left-0 w-full h-16 flex items-end pointer-events-none z-10 opacity-30 group-hover:opacity-100 transition-opacity">
+             {segments.map(seg => {
+                const startPct = (seg.startTime / state.duration) * 100;
+                const endPct = (seg.endTime / state.duration) * 100;
+                const width = Math.max(0.1, endPct - startPct);
+                const color = getGenreColor(seg.type);
+                
+                return (
+                  <div 
+                    key={`intensity-${seg.id}`}
+                    className="absolute bottom-0 border-t-2 transition-all duration-300"
+                    style={{ 
+                      left: `${startPct}%`,
+                      width: `${width}%`,
+                      height: `${(seg.rating || 0)}%`,
+                      borderColor: color,
+                      background: `linear-gradient(to top, ${color}22, transparent)`
+                    }}
+                  />
+                );
+             })}
+          </div>
 
           {/* Scene Segments (Genres) - Colored Bars */}
           <div className="absolute top-0 left-0 w-full h-1.5 z-20">
