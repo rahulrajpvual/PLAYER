@@ -624,16 +624,15 @@ const App: React.FC = () => {
 
   return (
     <div className={`relative w-full bg-[#050505] text-white flex flex-col font-sans selection:bg-indigo-500/30 ${file || playingStoryboard ? 'h-screen overflow-hidden fixed inset-0' : 'min-h-screen overflow-x-hidden overflow-y-auto'} scroll-smooth`}>
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[20%] w-96 h-96 bg-purple-600/20 rounded-full blur-[100px] animate-blob"></div>
-        <div className="absolute top-[20%] right-[20%] w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px] animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-[-10%] left-[30%] w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] animate-blob animation-delay-4000"></div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 bg-[#050505]">
+        {/* Technical Grid Background */}
+        <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
       </div>
 
       <main className="flex-1 flex flex-col relative z-10">
         {file ? (
-          <div className="absolute inset-0 bg-black animate-in fade-in duration-700">
+          <div className="absolute inset-0 bg-black">
             <VideoPlayer 
                 file={file} 
                 onClose={() => { setFile(null); loadData(); }} 
@@ -647,25 +646,29 @@ const App: React.FC = () => {
             />
         ) : (
           <div className="flex-1 flex flex-col min-h-screen">
-            <div className={`fixed top-0 left-0 w-full p-4 md:px-12 md:py-4 flex justify-between items-center z-[100] transition-all duration-700 ${isScrolled ? 'nav-blur py-3' : 'bg-gradient-to-b from-black/60 to-transparent py-8'}`}>
-              <div className="flex items-center gap-14">
-                <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setActiveTab('home')}>
-                  <FilmdaLogoText />
+            <div className={`fixed top-0 left-0 w-full px-8 py-6 flex justify-between items-center z-[100] bg-[#050505]/90 border-b border-white/10 backdrop-blur-sm transition-all`}>
+              <div className="flex items-center gap-12">
+                <div className="flex flex-col cursor-pointer group" onClick={() => setActiveTab('home')}>
+                   <h1 className="text-xl font-black tracking-tighter uppercase text-white leading-none">FILMDA_ARCHIVE</h1>
+                   <div className="flex items-center gap-2 mt-1">
+                      <span className="w-1.5 h-1.5 bg-indigo-500 rounded-none animate-none"/>
+                      <span className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">MIT_CSAIL // GOOGLE_DEEPMIND</span>
+                   </div>
                 </div>
                 
-                <div className="hidden lg:flex items-center gap-6">
+                <div className="hidden lg:flex items-center gap-8">
                   {[
-                      { id: 'home', label: 'Home' },
-                      { id: 'movies', label: 'Library' },
-                      { id: 'calendar', label: 'Journal' },
-                      { id: 'ideas', label: 'Ideas' },
-                      { id: 'analysis', label: 'Stats' },
-                      { id: 'insights', label: 'Analytics' },
+                      { id: 'home', label: 'CMD_CENTER' },
+                      { id: 'movies', label: 'DATABASE' },
+                      { id: 'calendar', label: 'LOGS' },
+                      { id: 'ideas', label: 'CACHE' },
+                      { id: 'analysis', label: 'METRICS' },
+                      { id: 'insights', label: 'DEEP_LEARNING' },
                   ].map((tab) => (
                       <button 
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`text-sm font-bold tracking-tight transition-all hover:text-white ${activeTab === tab.id ? 'text-white' : 'text-gray-400'}`}
+                        className={`text-[10px] font-mono font-bold uppercase tracking-[0.15em] transition-all hover:text-indigo-400 ${activeTab === tab.id ? 'text-indigo-500' : 'text-gray-500'}`}
                       >
                         {tab.label}
                       </button>
@@ -674,16 +677,16 @@ const App: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-6">
-                <div className="hidden sm:flex items-center bg-black/40 border border-white/10 rounded-full px-4 py-1.5 focus-within:border-white/30 transition-all">
-                  <Search size={16} className="text-gray-500" />
-                  <input type="text" placeholder="Titles, genres..." className="bg-transparent border-none text-sm px-3 focus:outline-none w-40 text-white placeholder:text-gray-600 font-medium" />
+                <div className="hidden sm:flex items-center bg-[#0a0a0a] border border-white/20 h-10 px-4 focus-within:border-indigo-500 transition-colors w-64">
+                  <span className="text-gray-600 font-mono text-xs mr-2">{'>'}</span>
+                  <input type="text" placeholder="SEARCH_ARCHIVE..." className="bg-transparent border-none text-[10px] font-mono w-full text-white placeholder:text-gray-700 focus:outline-none uppercase tracking-widest" />
                 </div>
                 <button 
                   onClick={() => setIsDragging(true)}
-                  className="bg-white text-black px-5 py-2 rounded-md text-xs font-black uppercase tracking-wider hover:bg-white/90 transition-all flex items-center gap-2"
+                  className="h-10 px-6 border border-white text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-colors flex items-center gap-3 active:scale-95"
                 >
-                  <Plus size={16} strokeWidth={3} />
-                  Analyze
+                  <Plus size={12} strokeWidth={4} />
+                  Analyze_Input
                 </button>
               </div>
             </div>
@@ -694,7 +697,7 @@ const App: React.FC = () => {
                   {/* HERO: Technical Overview Board */}
                   <div className="grid grid-cols-1 lg:grid-cols-4 lg:grid-rows-2 gap-6 h-auto lg:h-[600px]">
                     {/* Main Module: System Status */}
-                    <div className="lg:col-span-2 lg:row-span-2 relative rounded-lg border border-white/5 bg-[#0a0a0a] overflow-hidden p-10 flex flex-col justify-between group hover:border-white/10 transition-colors">
+                    <div className="lg:col-span-2 lg:row-span-2 relative rounded-none border border-white/5 bg-[#0a0a0a] overflow-hidden p-10 flex flex-col justify-between group hover:border-white/10 transition-colors">
                         <div className="absolute top-0 right-0 p-4 opacity-50">
                              <div className="grid grid-cols-3 gap-1">
                                  {Array.from({length: 9}).map((_, i) => (
@@ -736,7 +739,7 @@ const App: React.FC = () => {
                     </div>
 
                     {/* Stat Module 1: Deconstruction Index */}
-                    <div className="lg:col-span-2 bg-[#0a0a0a] rounded-lg p-8 border border-white/5 flex flex-col justify-between hover:border-indigo-500/50 transition-colors">
+                    <div className="lg:col-span-2 bg-[#0a0a0a] rounded-none p-8 border border-white/5 flex flex-col justify-between hover:border-indigo-500/50 transition-colors">
                          <div className="flex justify-between items-start">
                             <div>
                                 <div className="flex items-center gap-2 mb-4 text-indigo-500">
@@ -756,7 +759,7 @@ const App: React.FC = () => {
                     </div>
 
                     {/* Stat Module 2: Concept Cache */}
-                    <div className="lg:col-span-1 bg-[#0a0a0a] rounded-lg p-8 border border-white/5 flex flex-col justify-between hover:border-white/20 transition-colors">
+                    <div className="lg:col-span-1 bg-[#0a0a0a] rounded-none p-8 border border-white/5 flex flex-col justify-between hover:border-white/20 transition-colors">
                          <div>
                             <div className="flex items-center gap-2 mb-4 text-gray-400">
                                 <Flame size={18} />
@@ -770,7 +773,7 @@ const App: React.FC = () => {
                     </div>
 
                     {/* Stat Module 3: Temporal Log */}
-                    <div className="lg:col-span-1 bg-[#0a0a0a] rounded-lg p-8 border border-white/5 flex flex-col justify-between hover:border-white/20 transition-colors">
+                    <div className="lg:col-span-1 bg-[#0a0a0a] rounded-none p-8 border border-white/5 flex flex-col justify-between hover:border-white/20 transition-colors">
                          <div>
                             <div className="flex items-center gap-2 mb-4 text-gray-400">
                                 <Activity size={18} />
@@ -787,7 +790,7 @@ const App: React.FC = () => {
                   </div>
 
                   {/* HIGH-FREQUENCY ACTIVITY MONITOR */}
-                  <div className="bg-[#0a0a0a] border border-white/5 rounded-lg p-10 shadow-sm relative overflow-hidden group">
+                  <div className="bg-[#0a0a0a] border border-white/5 rounded-none p-10 shadow-sm relative overflow-hidden group">
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10 border-b border-white/5 pb-8">
                           <div>
                               <div className="flex items-center gap-3 mb-2">
@@ -1077,7 +1080,7 @@ const App: React.FC = () => {
                       <aside className="w-full md:w-[450px] border-t md:border-t-0 md:border-l border-white/5 bg-[#0a0a0a]/80 backdrop-blur-3xl flex flex-col min-h-[300px] md:h-auto">
                           <div className="p-4 md:p-8 border-b border-white/5">
                               <div className="flex items-center gap-3 mb-4 md:mb-8">
-                                  <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+                                  <div className="w-10 h-10 rounded-none bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
                                       <TrendingUp size={20} className="text-indigo-400" />
                                   </div>
                                   <div>
@@ -1093,7 +1096,7 @@ const App: React.FC = () => {
                                     placeholder="Search 1M+ movies..."
                                     value={discoverySearch}
                                     onChange={(e) => setDiscoverySearch(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-xs font-bold text-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-gray-700" 
+                                    className="w-full bg-white/5 border border-white/10 rounded-none py-3 pl-12 pr-4 text-xs font-bold text-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-gray-700 uppercase tracking-widest font-mono" 
                                   />
                               </div>
                           </div>
@@ -1114,12 +1117,11 @@ const App: React.FC = () => {
                                           e.currentTarget.classList.add('opacity-50');
                                       }}
                                       onDragEnd={(e) => { e.currentTarget.classList.remove('opacity-50'); }}
-                                      className="group bg-white/5 border border-white/5 rounded-[1.5rem] p-4 hover:bg-[#111] hover:border-indigo-500/30 transition-all cursor-grab active:cursor-grabbing relative overflow-hidden flex gap-4"
+                                      className="group bg-[#0a0a0a] border border-white/5 p-4 hover:border-indigo-500 hover:bg-[#0f0f0f] transition-all cursor-grab active:cursor-grabbing relative overflow-hidden flex gap-4 rounded-none"
                                     >
-                                      <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                                       
                                       {/* Poster Image */}
-                                      <div className="relative w-20 h-28 flex-shrink-0 overflow-hidden rounded-xl bg-white/5 border border-white/10 group-hover:border-indigo-500/30 transition-all">
+                                      <div className="relative w-20 h-28 flex-shrink-0 overflow-hidden bg-white/5 border border-white/10 group-hover:border-indigo-500 select-none">
                                           {movie.poster_path ? (
                                               <img src={movie.poster_path} alt={movie.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                           ) : (
@@ -1148,7 +1150,7 @@ const App: React.FC = () => {
                                               <div className="h-[1px] flex-1 bg-white/5" />
                                                <button 
                                                  onClick={() => addPlannerEntryFromList(movie, new Date().setHours(0,0,0,0))}
-                                                 className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-600 group-hover:text-indigo-400 transition-colors bg-white/5 px-2 py-1 rounded hover:bg-white/10"
+                                                 className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-600 group-hover:text-indigo-400 transition-colors bg-white/5 px-2 py-1 hover:bg-white/10"
                                                >
                                                    Quick Add
                                                </button>
@@ -1162,7 +1164,7 @@ const App: React.FC = () => {
                                         <button 
                                           disabled={isApiLoading}
                                           onClick={() => setApiPage(p => p + 1)}
-                                          className="flex items-center gap-2 px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-white bg-indigo-600 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20 active:scale-95 disabled:opacity-50"
+                                          className="flex items-center gap-2 px-8 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-[#0a0a0a] border border-white/20 hover:bg-white hover:text-black transition-all active:scale-95 disabled:opacity-50"
                                         >
                                             {isApiLoading ? (
                                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -1267,11 +1269,11 @@ const App: React.FC = () => {
                         </div>
                         <div className="relative">
                             <select 
-                                className="bg-[#121212] border border-white/10 text-white text-xs font-black py-2 px-4 rounded-full focus:outline-none uppercase tracking-widest appearance-none pr-10 cursor-pointer hover:border-white/20 transition-all" 
+                                className="bg-[#050505] border border-white/20 text-white text-xs font-black py-2 px-4 focus:outline-none uppercase tracking-widest appearance-none pr-10 cursor-pointer hover:border-white/50 transition-all rounded-none" 
                                 onChange={(e) => setSelectedAnalysisMovie(e.target.value)} 
                                 value={selectedAnalysisMovie || ""}
                             >
-                                <option value="" disabled>Select Movie for Analysis</option>
+                                <option value="" disabled>SELECT_TARGET...</option>
                                 {storyboards.map(s => (
                                     <option key={s.filename} value={s.filename}>{formatMovieName(s.filename)}</option>
                                 ))}
@@ -1283,18 +1285,18 @@ const App: React.FC = () => {
                     {selectedMovieData ? (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-1 space-y-6">
-                                <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 shadow-xl">
-                                    <div className="flex items-center gap-3 mb-6 font-black text-gray-400 uppercase text-xs tracking-widest"><FileVideo size={16}/> Overview</div>
+                                <div className="bg-[#0a0a0a] border border-white/10 p-6">
+                                    <div className="flex items-center gap-3 mb-6 font-black text-gray-400 uppercase text-xs tracking-widest"><FileVideo size={16}/> Metric Overview</div>
                                     <div className="space-y-4">
-                                        <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                        <div className="bg-white/5 p-4 border border-white/5 hover:border-white/20 transition-colors">
                                             <div className="text-[10px] text-gray-500 font-black mb-1 uppercase tracking-wider">Analysis Notes</div>
                                             <div className="text-3xl font-black text-white">{selectedMovieData.notes.length}</div>
                                         </div>
-                                        <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                        <div className="bg-white/5 p-4 border border-white/5 hover:border-white/20 transition-colors">
                                             <div className="text-[10px] text-gray-500 font-black mb-1 uppercase tracking-wider">Identified Scenes</div>
                                             <div className="text-3xl font-black text-white">{selectedMovieData.segments?.length || 0}</div>
                                         </div>
-                                        <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                        <div className="bg-white/5 p-4 border border-white/5 hover:border-white/20 transition-colors">
                                             <div className="text-[10px] text-gray-500 font-black mb-1 uppercase tracking-wider">Total Duration</div>
                                             <div className="text-3xl font-black text-white">{Math.floor((selectedMovieData.duration || 0) / 60)}m {Math.floor((selectedMovieData.duration || 0) % 60)}s</div>
                                         </div>
@@ -1303,7 +1305,7 @@ const App: React.FC = () => {
                             </div>
 
                             <div className="lg:col-span-2 space-y-8">
-                                <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl">
+                                <div className="bg-[#0a0a0a] border border-white/10 p-8">
                                     <div className="flex items-center gap-3 mb-6 font-black text-gray-400 uppercase text-xs tracking-widest"><Layers size={16}/> Structural Composition</div>
                                     <div className="space-y-6">
                                         {movieGenreData.length > 0 ? (
@@ -1336,7 +1338,7 @@ const App: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-8 shadow-sm relative overflow-hidden group">
+                                <div className="bg-[#0a0a0a] border border-white/10 p-8 relative overflow-hidden group">
                                     <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-6">
                                         <div className="flex items-center gap-3">
                                             <div className="w-2 h-2 rounded-full bg-indigo-500" />
@@ -1523,7 +1525,7 @@ const App: React.FC = () => {
 
                                     {/* Secondary Metrics Row */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-8">
+                                        <div className="bg-[#0a0a0a] border border-white/5 p-8">
                                             <div className="flex items-center gap-3 mb-8 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
                                                 <Activity size={12} strokeWidth={3}/> Engagement Persistence
                                             </div>
@@ -1545,7 +1547,7 @@ const App: React.FC = () => {
                                             )}
                                         </div>
 
-                                        <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-8">
+                                        <div className="bg-[#0a0a0a] border border-white/5 p-8">
                                             <div className="flex items-center gap-3 mb-8 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
                                                 <MonitorPlay size={12} strokeWidth={3}/> Event Distribution
                                             </div>
@@ -1790,9 +1792,9 @@ const App: React.FC = () => {
                 >
                     <button 
                        onClick={() => setIsDragging(false)}
-                       className="absolute top-8 right-8 p-3 bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-all transform hover:rotate-90"
+                       className="absolute top-8 right-8 p-3 bg-white/5 hover:bg-white text-gray-400 hover:text-black transition-all border border-white/10"
                     >
-                        <XCircle size={32} />
+                        <XCircle size={32} strokeWidth={1} />
                     </button>
 
                     <div className="max-w-2xl w-full text-center space-y-8">

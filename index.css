@@ -6,7 +6,6 @@
   --font-serif: "Caveat", ui-serif, Georgia, serif;
   --animate-spin-3d: spin-3d 25s linear infinite;
   --animate-tumble: tumble 18s linear infinite;
-  --animate-blob: blob 7s infinite;
 
   @keyframes spin-3d {
     0% { transform: rotateX(0) rotateY(0) rotateZ(0); }
@@ -15,12 +14,6 @@
   @keyframes tumble {
     0% { transform: rotateX(0) rotateY(0) rotateZ(0); }
     100% { transform: rotateX(180deg) rotateY(360deg) rotateZ(-180deg); }
-  }
-  @keyframes blob {
-    0% { transform: translate(0px, 0px) scale(1); }
-    33% { transform: translate(30px, -50px) scale(1.1); }
-    66% { transform: translate(-20px, 20px) scale(0.9); }
-    100% { transform: translate(0px, 0px) scale(1); }
   }
 }
 
@@ -56,7 +49,7 @@ html, body {
   }
   &::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
+    border-radius: 0px;
   }
 }
 
@@ -71,7 +64,7 @@ html, body {
 }
 
 @utility netflix-card {
-  @apply relative transition-all duration-350 ease-out cursor-pointer overflow-hidden rounded-md;
+  @apply relative transition-all duration-350 ease-out cursor-pointer overflow-hidden rounded-none;
   &:hover {
     @apply scale-105 z-40 shadow-[0_0_30px_rgba(0,0,0,0.8)];
   }
