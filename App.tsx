@@ -1740,7 +1740,7 @@ const App: React.FC = () => {
                                                   </div>
                                               </div>
                                               <div>
-                                                  <p className="text-[8px] font-mono text-indigo-400 mb-1">ID: {movie.id.substring(0,8)}</p>
+                                                  <p className="text-[8px] font-mono text-indigo-400 mb-1">ID: {(movie.id || movie.filename || 'UNKNOWN').substring(0,8)}</p>
                                                   <div className="h-px w-full bg-indigo-500/30 mb-2" />
                                                   <div className="flex items-center gap-1.5 text-white text-[9px] font-bold uppercase tracking-wider">
                                                        <MonitorPlay size={10} /> ACCESS
