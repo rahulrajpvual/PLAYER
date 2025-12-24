@@ -623,7 +623,7 @@ const App: React.FC = () => {
 
 
   return (
-    <div className={`relative min-h-screen w-full bg-[#050505] text-white flex flex-col font-sans selection:bg-indigo-500/30 ${file || playingStoryboard ? 'overflow-hidden h-screen' : ''} scroll-smooth`}>
+    <div className={`relative w-full bg-[#050505] text-white flex flex-col font-sans selection:bg-indigo-500/30 ${file || playingStoryboard ? 'h-screen overflow-hidden fixed inset-0' : 'min-h-screen overflow-x-hidden overflow-y-auto'} scroll-smooth`}>
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[20%] w-96 h-96 bg-purple-600/20 rounded-full blur-[100px] animate-blob"></div>
         <div className="absolute top-[20%] right-[20%] w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px] animate-blob animation-delay-2000"></div>

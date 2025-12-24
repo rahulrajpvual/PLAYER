@@ -24,6 +24,21 @@
   }
 }
 
+/* Force scroll behavior on root elements */
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: #050505; /* Match app background */
+}
+
+#root {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 @utility preserve-3d {
   transform-style: preserve-3d;
 }
