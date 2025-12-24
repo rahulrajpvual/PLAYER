@@ -8,7 +8,7 @@ import {
   PlayCircle, FolderPlus, Folder, ChevronRight, ChevronDown, MoreVertical, 
   Search, BookOpen, BarChart3, TrendingUp, Star, Calendar as CalendarIcon, 
   MonitorPlay, Clapperboard, RefreshCcw, LogOut, ChevronLeft, Plus, CheckCircle2, XCircle,
-  Activity, Tv, Monitor, Disc, Database, Ticket, Play
+  Activity, Tv, Monitor, Disc, Database, Ticket, Play, ArrowRight, Flame
 } from 'lucide-react';
 import { Note, SceneSegment, ActivityLog, MovieMeta, PlannerEntry, StoredStoryboard, StoryIdea } from './types';
 import { tmdbService } from './services/tmdbService';
@@ -618,7 +618,7 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="relative min-h-screen w-full bg-[#050505] text-white flex flex-col overflow-hidden font-sans selection:bg-indigo-500/30">
+    <div className={`relative min-h-screen w-full bg-[#050505] text-white flex flex-col font-sans selection:bg-indigo-500/30 ${file || playingStoryboard ? 'overflow-hidden h-screen' : ''} scroll-smooth`}>
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[20%] w-96 h-96 bg-purple-600/20 rounded-full blur-[100px] animate-blob"></div>
         <div className="absolute top-[20%] right-[20%] w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px] animate-blob animation-delay-2000"></div>
@@ -641,7 +641,7 @@ const App: React.FC = () => {
                 onClose={() => { setPlayingStoryboard(null); loadData(); }}
             />
         ) : (
-          <div className="flex-1 flex flex-col h-screen">
+          <div className="flex-1 flex flex-col min-h-screen">
             <div className={`fixed top-0 left-0 w-full p-4 md:px-12 md:py-4 flex justify-between items-center z-[100] transition-all duration-700 ${isScrolled ? 'nav-blur py-3' : 'bg-gradient-to-b from-black/60 to-transparent py-8'}`}>
               <div className="flex items-center gap-14">
                 <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setActiveTab('home')}>
@@ -683,228 +683,280 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar pb-12">
+            <div className="flex-1 pb-12">
               {activeTab === 'home' && (
-                <div className="animate-in fade-in duration-1000">
-                  <div className="relative h-[90vh] w-full group overflow-hidden">
-                    <div className="absolute inset-0">
-                      <img 
-                        src={nowPlayingMovies[0]?.poster_path || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2000&auto=format&fit=crop"} 
-                        alt="Hero Backdrop"
-                        className="w-full h-full object-cover brightness-[0.5] transition-transform duration-[20s] group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/20 to-transparent" />
-                      <div className="absolute inset-0 netflix-gradient" />
+                <div className="animate-in fade-in duration-1000 pt-32 px-4 md:px-12 space-y-16 pb-32">
+                  {/* HERO BENTO GRID */}
+                  <div className="grid grid-cols-1 lg:grid-cols-4 lg:grid-rows-2 gap-6 h-auto lg:h-[700px]">
+                    {/* Main Feature: Studio Hub */}
+                    <div className="lg:col-span-2 lg:row-span-2 relative rounded-[3rem] overflow-hidden group shadow-2xl border border-white/5">
+                        <img 
+                          src="/cinematic_studio_hero.png" 
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-[20s] group-hover:scale-110 brightness-75 scale-105"
+                          alt="Studio Hero"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
+                        
+                        <div className="absolute inset-0 p-10 md:p-16 flex flex-col justify-end">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_15px_#ef4444]" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/80">Active Analysis Engine</span>
+                            </div>
+                            <h1 className="text-6xl md:text-8xl font-[1000] tracking-[-0.08em] uppercase leading-[0.85] text-white mb-10">
+                                STUDIO<br/>COMMAND<br/><span className="text-indigo-500 italic">CENTER.</span>
+                            </h1>
+                            <div className="flex flex-wrap gap-4">
+                                <button 
+                                  onClick={() => setIsDragging(true)}
+                                  className="bg-white text-black px-12 py-5 rounded-2xl font-[1000] uppercase text-xs tracking-widest flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-[0_20px_50px_rgba(255,255,255,0.2)]"
+                                >
+                                  <Upload size={20} strokeWidth={3} />
+                                  Initialize
+                                </button>
+                                <button 
+                                  onClick={() => setActiveTab('calendar')}
+                                  className="bg-white/10 backdrop-blur-3xl text-white border border-white/10 px-8 py-5 rounded-2xl font-[1000] uppercase text-xs tracking-widest flex items-center gap-3 hover:bg-white/20 transition-all"
+                                >
+                                  <BookOpen size={20} />
+                                  Vault
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="absolute bottom-[15%] left-4 md:left-12 max-w-3xl space-y-6 animate-slide-up">
-                      <div className="flex items-center gap-3">
-                        <span className="bg-red-600 text-white text-[10px] font-[1000] px-3 py-1 rounded-sm tracking-[0.2em] uppercase">Cinematic Intelligence</span>
-                        <div className="flex gap-1">
-                          {[1,2,3,4,5].map(i => <Star key={i} size={14} fill="currentColor" className="text-yellow-500" />)}
-                        </div>
-                      </div>
-                      
-                      <h1 className="text-7xl md:text-[9rem] font-[1000] tracking-[-0.06em] uppercase leading-[0.85] text-white">
-                        FRAME <br/> BY <span className="text-indigo-600">FRAME</span>
-                      </h1>
-                      
-                      <p className="text-xl text-gray-300 font-bold leading-relaxed max-w-lg tracking-tight">
-                        The ultimate analytical suite for professional filmmakers and cinema enthusiasts. Decode the language of cinema.
-                      </p>
+                    {/* Stats Card 1: Analysis */}
+                    <div className="lg:col-span-2 bg-gradient-to-br from-[#111] to-black rounded-[2.5rem] p-10 border border-white/5 flex flex-col justify-between group hover:border-indigo-500/30 transition-all overflow-hidden relative shadow-2xl">
+                         <div className="absolute -right-4 -top-4 w-40 h-40 bg-indigo-600/10 rounded-full blur-[80px] group-hover:bg-indigo-600/20 transition-all" />
+                         <div className="relative z-10 flex justify-between items-start">
+                            <div>
+                                <Zap size={28} className="text-indigo-500 mb-6" />
+                                <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">Total Deconstructions</h3>
+                                <div className="text-6xl font-[1000] text-white tabular-nums tracking-tighter">{storyboards.length}</div>
+                            </div>
+                            <div className="pt-2">
+                                <TrendingUp size={20} className="text-green-500" />
+                            </div>
+                         </div>
+                         <div className="relative z-10 mt-8 flex items-center gap-3 text-[11px] font-[1000] text-indigo-400 uppercase tracking-widest">
+                            <span>Last Logged: {storyboards[0] ? formatMovieName(storyboards[0].filename) : 'Awaiting Data'}</span>
+                            <ArrowRight size={14} className="group-hover:translate-x-2 transition-transform" />
+                         </div>
+                    </div>
 
-                      <div className="flex items-center gap-5 pt-6">
-                        <button 
-                          onClick={() => setIsDragging(true)}
-                          className="bg-white text-black px-12 py-5 rounded-md font-black uppercase tracking-widest flex items-center gap-3 hover:bg-white/90 transition-all scale-100 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.2)]"
-                        >
-                          <PlayCircle size={28} fill="currentColor" />
-                          Initialize Session
-                        </button>
-                        <button 
-                          onClick={() => setActiveTab('calendar')}
-                          className="bg-white/10 backdrop-blur-3xl text-white border border-white/20 px-10 py-5 rounded-md font-black uppercase tracking-widest flex items-center gap-3 hover:bg-white/20 transition-all"
-                        >
-                          <BookOpen size={24} />
-                          Journal
-                        </button>
-                      </div>
+                    {/* Stats Card 2: Ideas */}
+                    <div className="lg:col-span-1 bg-[#0c0c0c] rounded-[2.5rem] p-8 border border-white/5 flex flex-col justify-between group hover:border-pink-500/30 transition-all overflow-hidden relative shadow-2xl">
+                         <div className="absolute -right-8 -top-8 w-32 h-32 bg-pink-600/10 rounded-full blur-3xl group-hover:bg-pink-600/20 transition-all" />
+                         <div>
+                            <Flame size={24} className="text-pink-500 mb-6" />
+                            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Concept Vault</h3>
+                            <div className="text-5xl font-[1000] text-white tabular-nums tracking-tighter">{storyIdeas.length}</div>
+                         </div>
+                         <div className="mt-8 flex items-center gap-2 text-[10px] font-[1000] text-pink-400 uppercase tracking-widest">
+                            <span>Capture Ideas</span>
+                            <Plus size={12} strokeWidth={4} />
+                         </div>
+                    </div>
+
+                    {/* Stats Card 3: Study Time */}
+                    <div className="lg:col-span-1 bg-gradient-to-tr from-[#0c0c0c] to-[#151515] rounded-[2.5rem] p-8 border border-white/5 flex flex-col justify-between group hover:border-emerald-500/30 transition-all overflow-hidden relative shadow-2xl">
+                         <div className="absolute -left-8 -bottom-8 w-32 h-32 bg-emerald-600/10 rounded-full blur-3xl group-hover:bg-emerald-600/20 transition-all" />
+                         <div>
+                            <Activity size={24} className="text-emerald-500 mb-6" />
+                            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Study Hours</h3>
+                            <div className="text-5xl font-[1000] text-white tabular-nums tracking-tighter">{Math.round(activityLogs.reduce((acc, l) => acc + l.durationPlayed, 0) / 60)}<span className="text-xl text-gray-600 ml-1">m</span></div>
+                         </div>
+                         <div className="mt-8 flex items-center gap-2 text-[10px] font-[1000] text-emerald-400 uppercase tracking-widest">
+                            <span>14-Day Streak</span>
+                            <TrendingUp size={12} strokeWidth={4} />
+                         </div>
                     </div>
                   </div>
 
-                  {/* Scrolling Rows */}
-                  <div className="relative z-20 -mt-40 space-y-16 pb-32">
-                    {/* Row 0: Now Playing / IMDB Style */}
-                    <div className="pl-4 md:pl-12 space-y-6">
-                      <div className="flex items-end gap-3">
-                        <h3 className="text-2xl font-[1000] tracking-tighter text-white uppercase italic">
-                          Now Streaming
-                        </h3>
-                        <span className="text-indigo-500 font-black text-xs uppercase tracking-widest mb-1 pb-px border-b border-indigo-500/30">Latest Releases</span>
-                      </div>
-                      <div className="flex gap-5 overflow-x-auto pb-10 no-scrollbar pr-12">
-                        {nowPlayingMovies.map((movie, idx) => (
-                          <div 
-                            key={movie.id}
-                            className="netflix-card flex-shrink-0 w-48 md:w-60 aspect-[2/3] bg-[#0a0a0a] rounded-xl overflow-hidden border border-white/5 shadow-[0_20px_40px_rgba(0,0,0,0.6)] group"
-                          >
-                            {idx < 10 && (
-                                <div className="absolute top-0 right-0 z-10 w-12 h-16 bg-red-600/90 backdrop-blur-md flex flex-col items-center justify-center font-[1050] text-white italic clip-path-banner">
-                                    <span className="text-[10px] leading-tight opacity-70">TOP</span>
-                                    <span className="text-2xl leading-none">{idx + 1}</span>
-                                </div>
-                            )}
-                            <img 
-                              src={movie.poster_path} 
-                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                              alt={movie.title}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-6">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-yellow-500 font-black text-xs flex items-center gap-1"><Star size={12} fill="currentColor" /> {movie.rating}</span>
-                                <span className="bg-white/10 text-[8px] font-black px-2 py-0.5 rounded-full uppercase text-gray-300">4K Ultra HD</span>
+                  {/* STUDIO PULSE - PERFORMANCE CHART */}
+                  <div className="bg-gradient-to-br from-[#0c0c0c] to-black rounded-[4rem] p-12 border border-white/5 shadow-2xl relative overflow-hidden group">
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+                          <div>
+                              <div className="flex items-center gap-3 text-indigo-500 mb-3">
+                                  <TrendingUp size={28} />
+                                  <h2 className="text-3xl font-[1050] uppercase tracking-tighter italic text-white">Focus Intelligence</h2>
                               </div>
-                              <span className="font-[1000] text-base uppercase leading-tight line-clamp-2 tracking-tight">{movie.title}</span>
-                              <div className="flex gap-2 mt-4">
-                                <button className="flex-1 bg-white text-black text-[10px] font-black uppercase py-2.5 rounded-lg hover:bg-gray-200 transition-colors">Details</button>
-                                <button className="p-2.5 bg-white/10 backdrop-blur-md border border-white/10 rounded-lg hover:bg-white/20 transition-all"><Plus size={16} /></button>
-                              </div>
-                            </div>
+                              <p className="text-gray-500 text-sm font-[1000] uppercase tracking-[0.1em]">Deep temporal analysis of your cinematic study sessions.</p>
                           </div>
-                        ))}
+                          <div className="flex gap-4">
+                               <div className="bg-indigo-500/10 border border-indigo-500/20 px-5 py-2 rounded-full">
+                                    <span className="text-[10px] font-[1000] uppercase tracking-widest text-indigo-400 italic">Engine Optimizing</span>
+                               </div>
+                          </div>
                       </div>
-                    </div>
+                      
+                      {/* Better Continuous Activity Graph (SVG Area Chart) */}
+                      <div className="h-64 relative px-4 mt-8">
+                          <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 100">
+                              <defs>
+                                  <linearGradient id="activityGradient" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor="#6366f1" stopOpacity="0.5" />
+                                      <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+                                  </linearGradient>
+                                  <filter id="glow">
+                                      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                                      <feMerge>
+                                          <feMergeNode in="coloredBlur"/>
+                                          <feMergeNode in="SourceGraphic"/>
+                                      </feMerge>
+                                  </filter>
+                              </defs>
+                              
+                              {/* The Area Path */}
+                              <path 
+                                  d={`M 0 100 ${dailyActivity.map((day, i) => {
+                                      const x = (i / (dailyActivity.length - 1)) * 1000;
+                                      const maxMins = Math.max(...dailyActivity.map(d => d.minutes)) || 1;
+                                      const y = 100 - (day.minutes / maxMins) * 80 - 10;
+                                      return `L ${x} ${y}`;
+                                  }).join(' ')} L 1000 100 Z`}
+                                  fill="url(#activityGradient)"
+                                  className="transition-all duration-1000"
+                              />
+                              
+                              {/* The Smooth Spline Path */}
+                              <path 
+                                  d={`M 0 ${100 - (dailyActivity[0].minutes / (Math.max(...dailyActivity.map(d => d.minutes)) || 1)) * 80 - 10} ${dailyActivity.map((day, i) => {
+                                      const x = (i / (dailyActivity.length - 1)) * 1000;
+                                      const maxMins = Math.max(...dailyActivity.map(d => d.minutes)) || 1;
+                                      const y = 100 - (day.minutes / maxMins) * 80 - 10;
+                                      return `L ${x} ${y}`;
+                                  }).join(' ')}`}
+                                  fill="none"
+                                  stroke="#818cf8"
+                                  strokeWidth="3"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  filter="url(#glow)"
+                                  className="transition-all duration-1000"
+                              />
 
-                    {/* Row 1: Recently Watched (Dynamic TMDB) */}
-                    {recentlyWatched.length > 0 && (
-                        <div className="pl-4 md:pl-12 space-y-6">
-                            <div className="flex items-end gap-3">
-                                <h3 className="text-2xl font-[1000] tracking-tighter text-white uppercase italic">
-                                    Recently Watched
-                                </h3>
-                                <span className="text-pink-500 font-black text-xs uppercase tracking-widest mb-1 pb-px border-b border-pink-500/30">Continue Analysis</span>
-                            </div>
-                            <div className="flex gap-5 overflow-x-auto pb-10 no-scrollbar pr-12">
-                                {recentlyWatched.map((movie) => (
-                                    <div 
-                                        key={movie.id}
-                                        className="netflix-card flex-shrink-0 w-44 md:w-56 aspect-[2/3] bg-[#0a0a0a] rounded-xl overflow-hidden border border-white/5 shadow-[0_20px_40px_rgba(0,0,0,0.6)] group cursor-pointer"
-                                    >
-                                        {movie.poster_path ? (
-                                            <img 
-                                                src={movie.poster_path} 
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                                alt={movie.title}
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-gray-900 to-black">
-                                                <Clapperboard size={48} className="text-gray-800 mb-4" />
-                                                <span className="text-[10px] font-black uppercase text-gray-500">{movie.title}</span>
-                                            </div>
-                                        )}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-6">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="text-yellow-500 font-black text-xs flex items-center gap-1"><Star size={12} fill="currentColor" /> {movie.rating}</span>
-                                                <span className="bg-white/10 text-[8px] font-black px-2 py-0.5 rounded-full uppercase text-gray-300">WATCHED</span>
-                                            </div>
-                                            <span className="font-[1000] text-sm uppercase leading-tight line-clamp-2 tracking-tight">{movie.title}</span>
-                                            <div className="flex gap-2 mt-4">
-                                                <button className="flex-1 bg-white text-black text-[10px] font-black uppercase py-2.5 rounded-lg hover:bg-gray-200 transition-colors">Play</button>
-                                                <button className="p-2.5 bg-white/10 backdrop-blur-md border border-white/10 rounded-lg hover:bg-white/20 transition-all"><BarChart3 size={16} /></button>
+                              {/* Interactive Points */}
+                              {dailyActivity.map((day, i) => {
+                                  const x = (i / (dailyActivity.length - 1)) * 1000;
+                                  const maxMins = Math.max(...dailyActivity.map(d => d.minutes)) || 1;
+                                  const y = 100 - (day.minutes / maxMins) * 80 - 10;
+                                  return (
+                                      <circle 
+                                          key={i} cx={x} cy={y} r="4" 
+                                          fill="#6366f1" stroke="white" strokeWidth="2"
+                                          className="cursor-pointer hover:r-6 transition-all"
+                                      >
+                                          <title>{day.date}: {day.minutes}m</title>
+                                      </circle>
+                                  );
+                              })}
+                          </svg>
+
+                          {/* Date Labels Below SVG */}
+                          <div className="absolute top-[110%] left-0 w-full flex justify-between px-2">
+                              {dailyActivity.map((day, i) => (
+                                  <span key={i} className="text-[9px] font-black text-gray-600 uppercase tracking-widest hidden md:block">{day.date}</span>
+                              ))}
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* RECENT VAULT ACCESS */}
+                  {storyboards.length > 0 && (
+                    <div className="space-y-10">
+                       <div className="flex justify-between items-center border-b border-white/5 pb-6">
+                            <h2 className="text-4xl font-[1050] uppercase tracking-[-0.05em] italic">Vault <span className="text-indigo-500">Highlights</span></h2>
+                            <button onClick={() => setActiveTab('movies')} className="text-xs font-black uppercase text-indigo-400 flex items-center gap-2 group hover:text-white transition-all">
+                                EXPLORE ARCHIVES
+                                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                            </button>
+                       </div>
+                       
+                       <div className="flex gap-10 overflow-x-auto pb-12 no-scrollbar -mx-4 px-4 md:-mx-12 md:px-12">
+                            {storyboards.map((sb) => (
+                                <div 
+                                  key={sb.filename}
+                                  onClick={() => setPlayingStoryboard(sb)}
+                                  className="flex-shrink-0 w-80 md:w-[450px] group cursor-pointer"
+                                >
+                                    <div className="relative aspect-video rounded-[2.5rem] overflow-hidden border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] mb-8 transition-all hover:scale-[1.02] hover:shadow-indigo-500/10">
+                                        <img 
+                                          src={sb.notes.find(n => n.thumbnail)?.thumbnail || 'https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=400&auto=format&fit=crop'} 
+                                          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 brightness-90 group-hover:brightness-100"
+                                          alt={sb.filename}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                        <div className="absolute top-6 left-6 flex gap-2">
+                                            <span className="bg-indigo-600/90 backdrop-blur-md text-[8px] font-black px-3 py-1.5 rounded-full tracking-widest uppercase shadow-xl font-mono">{sb.scenes?.length || 0} CUTS</span>
+                                            <span className="bg-white/10 backdrop-blur-md text-[8px] font-black px-3 py-1.5 rounded-full tracking-widest uppercase shadow-xl font-mono">{sb.notes?.length || 0} FRAMES</span>
+                                        </div>
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="w-16 h-16 bg-white/10 backdrop-blur-2xl rounded-full flex items-center justify-center text-white border border-white/20 scale-0 group-hover:scale-100 transition-all duration-500 shadow-2xl">
+                                                <Play size={24} fill="currentColor" className="ml-1" />
                                             </div>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Row 2: Recent Analysis */}
-                    {storyboards.length > 0 && (
-                      <div className="pl-4 md:pl-12 space-y-6">
-                        <h3 className="text-2xl font-black tracking-tighter text-white flex items-center gap-3 uppercase italic">
-                          Analysis Vault
-                          <span className="w-12 h-px bg-white/20"></span>
-                        </h3>
-                        <div className="flex gap-6 overflow-x-auto pb-10 no-scrollbar pr-12">
-                          {storyboards.slice(0, 10).map((sb) => (
-                            <div 
-                              key={sb.filename}
-                              onClick={() => setPlayingStoryboard(sb)}
-                              className="netflix-card flex-shrink-0 w-72 md:w-96 h-40 md:h-56 bg-[#0a0a0a] rounded-xl overflow-hidden border border-white/5 shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
-                            >
-                              <img 
-                                src={sb.notes.find(n => n.thumbnail)?.thumbnail || 'https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=400&auto=format&fit=crop'} 
-                                className="w-full h-full object-cover opacity-60 hover:opacity-100 transition-all duration-700"
-                                alt={sb.filename}
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="bg-indigo-600 text-[9px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase">{sb.scenes?.length || 0} Cuts</span>
-                                  <span className="bg-white/10 backdrop-blur-md text-[9px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase">{sb.notes?.length || 0} Frames</span>
+                                    <h3 className="text-2xl font-[1000] uppercase tracking-tighter truncate group-hover:text-indigo-400 transition-colors mb-2 italic">{formatMovieName(sb.filename)}</h3>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Processed: {new Date(sb.lastModified).toLocaleDateString()}</p>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f1]" />
+                                    </div>
                                 </div>
-                                <span className="font-black text-lg md:text-xl truncate uppercase tracking-tight">{formatMovieName(sb.filename)}</span>
-                                <div className="flex items-center gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <div className="w-8 h-8 bg-white rounded-full text-black flex items-center justify-center shadow-xl"><Play size={12} fill="currentColor" className="ml-0.5" /></div>
-                                  <span className="text-[10px] text-white font-black uppercase tracking-[0.2em]">Open Analysis</span>
+                            ))}
+                       </div>
+                    </div>
+                  )}
+
+                  {/* GLOBAL DISCOVERY - MASONRY STYLE */}
+                  <div className="space-y-12 pb-24">
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/5 pb-8">
+                            <h2 className="text-4xl font-[1050] uppercase tracking-[-0.05em] italic">Library <span className="text-indigo-500 text-shadow-sm">Discovery</span></h2>
+                            <div className="w-full md:w-auto flex items-center gap-4 bg-[#0a0a0a] border border-white/10 px-6 py-4 rounded-[2rem] focus-within:border-indigo-500/50 transition-all shadow-inner">
+                                <Search size={18} className="text-gray-600" />
+                                <input 
+                                    type="text" 
+                                    value={discoverySearch}
+                                    onChange={(e) => setDiscoverySearch(e.target.value)}
+                                    placeholder="Search 1M+ masterpieces..." 
+                                    className="bg-transparent border-none text-xs font-[1000] focus:outline-none w-full md:w-64 uppercase tracking-widest placeholder:text-gray-700"
+                                />
+                            </div>
+                       </div>
+
+                       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+                            {apiMovies.map((movie, idx) => (
+                                <div 
+                                    key={movie.id}
+                                    className={`relative rounded-[2rem] overflow-hidden group border border-white/10 cursor-pointer shadow-2xl transition-all hover:border-indigo-500/30 ${idx === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}
+                                >
+                                    <img 
+                                        src={movie.poster_path} 
+                                        className="w-full h-full object-cover transition-transform duration-[12s] group-hover:scale-110 brightness-90 group-hover:brightness-100"
+                                        alt={movie.title}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-700 p-8 flex flex-col justify-end">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <span className="text-yellow-500 font-black text-xs flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-lg backdrop-blur-md"><Star size={12} fill="currentColor" /> {movie.rating}</span>
+                                            <span className="bg-indigo-600 text-[10px] font-black px-2.5 py-1 rounded italic uppercase tracking-tighter">IMAX</span>
+                                        </div>
+                                        <h4 className="text-2xl font-[1000] uppercase leading-none tracking-tighter mb-6 line-clamp-2 italic">{movie.title}</h4>
+                                        <button 
+                                          onClick={(e) => { e.stopPropagation(); addPlannerEntryFromList(movie, new Date().setHours(0,0,0,0)); }}
+                                          className="w-full py-4 bg-white text-black text-[10px] font-black uppercase rounded-[1rem] hover:bg-indigo-500 hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-500 shadow-2xl"
+                                        >
+                                            Add to Plan
+                                        </button>
+                                    </div>
+                                    <div 
+                                      onClick={(e) => { e.stopPropagation(); addPlannerEntryFromList(movie, new Date().setHours(0,0,0,0)); }}
+                                      className="absolute top-6 right-6 flex items-center justify-center w-12 h-12 rounded-2xl bg-black/40 backdrop-blur-3xl border border-white/20 opacity-0 group-hover:opacity-100 transition-all duration-500 transform -rotate-12 group-hover:rotate-0"
+                                    >
+                                        <Plus size={20} className="text-white" strokeWidth={3} />
+                                    </div>
                                 </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Row 2: Global Classics */}
-                    <div className="pl-4 md:pl-12 space-y-6">
-                      <h3 className="text-2xl font-black tracking-tighter text-white flex items-center gap-3 uppercase italic">
-                        Cinephile Archives
-                        <span className="w-12 h-px bg-white/20"></span>
-                      </h3>
-                      <div className="flex gap-5 overflow-x-auto pb-10 no-scrollbar pr-12">
-                        {apiMovies.filter(m => !nowPlayingMovies.find(nm => nm.id === m.id)).map((movie) => (
-                          <div 
-                            key={movie.id}
-                            className="netflix-card flex-shrink-0 w-44 md:w-56 aspect-[2/3] bg-[#0a0a0a] rounded-xl overflow-hidden border border-white/5 shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
-                          >
-                            <img 
-                              src={movie.poster_path} 
-                              className="w-full h-full object-cover hover:scale-110 transition-transform duration-[10s]"
-                              alt={movie.title}
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-all flex flex-col items-center justify-center p-5 text-center">
-                              <div className="w-14 h-14 rounded-full border-2 border-white/30 flex items-center justify-center mb-4 transition-transform group-hover:rotate-12">
-                                <Plus size={24} className="text-white" />
-                              </div>
-                              <span className="font-black text-xs uppercase leading-tight line-clamp-2 mb-2">{movie.title}</span>
-                              <span className="text-[9px] text-indigo-400 font-black uppercase tracking-widest px-3 py-1 bg-white/5 rounded-full">Coming Soon</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Feature Highlight Call to Action */}
-                    <div className="mx-4 md:mx-12 rounded-[2rem] bg-indigo-600 overflow-hidden relative group">
-                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />
-                        <div className="relative p-12 md:p-20 flex flex-col md:flex-row items-center justify-between gap-12">
-                          <div className="space-y-6 max-w-xl text-center md:text-left">
-                            <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">Ready to <br/> Analyze?</h2>
-                            <p className="text-xl text-indigo-100 font-medium">Drop your footage below to get started with frame-by-frame annotation and automated scene detection.</p>
-                            <button 
-                              onClick={() => setIsDragging(true)}
-                              className="bg-black text-white px-10 py-4 rounded-full font-black uppercase tracking-widest hover:scale-105 transition-all shadow-2xl active:scale-95"
-                            >
-                              Initialize Studio
-                            </button>
-                          </div>
-                          <div className="relative w-full max-w-md aspect-video rounded-3xl overflow-hidden shadow-[0_0_80px_rgba(255,255,255,0.2)] bg-black/20 backdrop-blur-3xl border border-white/10 p-4">
-                             <div className="w-full h-full rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center">
-                               <Upload size={48} className="text-white/40 animate-bounce" />
-                             </div>
-                          </div>
-                        </div>
-                    </div>
+                            ))}
+                       </div>
                   </div>
                 </div>
               )}

@@ -1695,46 +1695,74 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
 
                         <div className="bg-[#111] p-4 rounded-xl border border-white/5">
                             <h4 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest">Color Histogram</h4>
-                            <div className="flex h-12 rounded-lg overflow-hidden ring-1 ring-white/10 mb-4">
-                                {realtimeColors.palette.map((c, i) => (
-                                    <div key={i} className="flex-1" style={{ backgroundColor: c }} title={c} />
-                                ))}
-                            </div>
-                            <div className="flex items-end h-24 gap-1">
-                                 {realtimeColors.histogram.map((h, i) => (
-                                     <div key={i} className="flex-1 flex flex-col justify-end h-full gap-px">
-                                         <div style={{ height: `${h.r * 100}%` }} className="w-full bg-red-500/80 rounded-sm"></div>
-                                         <div style={{ height: `${h.g * 100}%` }} className="w-full bg-green-500/80 rounded-sm"></div>
-                                         <div style={{ height: `${h.b * 100}%` }} className="w-full bg-blue-500/80 rounded-sm"></div>
-                                     </div>
+                            <div className="flex h-12 gap-px mb-2 overflow-hidden rounded-md bg-black/40">
+                                 {realtimeColors.avg.map((c, i) => (
+                                     <div key={i} className="flex-1" style={{ backgroundColor: c }} title={c} />
                                  ))}
-                            </div>
+                             </div>
+                             <div className="h-32 w-full bg-black/50 rounded-lg border border-white/10 relative overflow-hidden">
+                                 <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                                     {/* Red Channel */}
+                                     <path 
+                                         d={`M 0 100 ${realtimeColors.histogram.map((h, i) => `L ${i} ${100 - h.r * 100}`).join(' ')} L 100 100`} 
+                                         fill="rgba(239, 68, 68, 0.2)" stroke="rgba(239, 68, 68, 0.8)" strokeWidth="0.5"
+                                     />
+                                     {/* Green Channel */}
+                                     <path 
+                                         d={`M 0 100 ${realtimeColors.histogram.map((h, i) => `L ${i} ${100 - h.g * 100}`).join(' ')} L 100 100`} 
+                                         fill="rgba(34, 197, 94, 0.2)" stroke="rgba(34, 197, 94, 0.8)" strokeWidth="0.5"
+                                     />
+                                     {/* Blue Channel */}
+                                     <path 
+                                         d={`M 0 100 ${realtimeColors.histogram.map((h, i) => `L ${i} ${100 - h.b * 100}`).join(' ')} L 100 100`} 
+                                         fill="rgba(59, 130, 246, 0.2)" stroke="rgba(59, 130, 246, 0.8)" strokeWidth="0.5"
+                                     />
+                                 </svg>
+                             </div>
                         </div>
 
                         <div className="bg-[#111] p-4 rounded-xl border border-white/5">
                              <h4 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest">Intensity Mapping</h4>
-                             <div className="h-24 w-full bg-black/50 rounded-lg border border-white/10 relative overflow-hidden flex items-end">
-                                 {segments.map(seg => (
-                                     <div 
-                                         key={seg.id}
-                                         className="absolute bottom-0 bg-indigo-500/40 border-l border-indigo-500/20 hover:bg-indigo-500/60 transition-all cursor-pointer group"
-                                         style={{
-                                             left: `${(seg.startTime / (videoRef.current?.duration || 1)) * 100}%`,
-                                             width: `${Math.max(0.5, ((seg.endTime - seg.startTime) / (videoRef.current?.duration || 1)) * 100)}%`,
-                                             height: `${seg.rating || 0}%`
-                                         }}
-                                         onClick={() => { if(videoRef.current) videoRef.current.currentTime = seg.startTime; }}
-                                     >
-                                         <div className="opacity-0 group-hover:opacity-100 absolute -top-6 left-1/2 -translate-x-1/2 bg-indigo-600 text-[8px] px-1.5 py-0.5 rounded whitespace-nowrap z-10 font-bold">
-                                             {seg.type.toUpperCase()}: {seg.rating}%
+                             <div className="h-24 w-full bg-black/50 rounded-lg border border-white/10 relative overflow-visible">
+                                 <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 100">
+                                     <defs>
+                                         <linearGradient id="sidebarIntensityGrad" x1="0" y1="0" x2="0" y2="1">
+                                             <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
+                                             <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+                                         </linearGradient>
+                                     </defs>
+                                     {segments.length > 0 ? (
+                                         <path 
+                                            d={`M 0 100 ${segments.sort((a,b) => a.startTime - b.startTime).map((seg) => {
+                                                const x = (seg.startTime / (videoRef.current?.duration || 1)) * 1000;
+                                                const y = 100 - (seg.rating || 0);
+                                                const midX = ((seg.startTime + seg.endTime) / 2 / (videoRef.current?.duration || 1)) * 1000;
+                                                return `L ${x} ${y} Q ${midX} ${y} ${(seg.endTime / (videoRef.current?.duration || 1)) * 1000} ${y}`;
+                                            }).join(' ')} L 1000 100 Z`}
+                                            fill="url(#sidebarIntensityGrad)"
+                                            stroke="#6366f1"
+                                            strokeWidth="1.5"
+                                         />
+                                     ) : (
+                                         <text x="500" y="55" textAnchor="middle" fill="#333" className="text-[10px] uppercase font-black">Waiting for Data</text>
+                                     )}
+                                 </svg>
+                                 <div className="absolute inset-0 flex">
+                                     {segments.map(seg => (
+                                         <div 
+                                             key={seg.id}
+                                             className="h-full hover:bg-white/5 transition-all cursor-pointer group relative"
+                                             style={{
+                                                 width: `${((seg.endTime - seg.startTime) / (videoRef.current?.duration || 1)) * 100}%`,
+                                             }}
+                                             onClick={() => { if(videoRef.current) videoRef.current.currentTime = seg.startTime; }}
+                                         >
+                                             <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-indigo-600 text-[8px] px-1.5 py-0.5 rounded whitespace-nowrap z-50 font-bold shadow-xl border border-white/10">
+                                                 {seg.type.toUpperCase()}: {seg.rating}%
+                                             </div>
                                          </div>
-                                     </div>
-                                 ))}
-                                 {segments.length === 0 && (
-                                     <div className="absolute inset-0 flex items-center justify-center text-[10px] text-gray-600 uppercase font-black">
-                                         No Intensity Data Logged
-                                     </div>
-                                 )}
+                                     ))}
+                                 </div>
                              </div>
                         </div>
                         

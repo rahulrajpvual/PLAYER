@@ -279,85 +279,104 @@ const VideoControls: React.FC<VideoControlsProps> = ({
             </div>
           )}
 
-          {/* Cinematic Intensity Graph (Rating) */}
-          <div className="absolute -top-16 left-0 w-full h-16 flex items-end pointer-events-none z-10 opacity-30 group-hover:opacity-100 transition-opacity">
+          {/* Cinematic Intensity & Sentiment Waveform - Smooth SVG Path */}
+          <div className="absolute -top-24 left-0 w-full h-24 pointer-events-none z-10 opacity-40 group-hover:opacity-100 transition-all duration-700">
+             <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 100">
+                <defs>
+                   <linearGradient id="intensityGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+                   </linearGradient>
+                </defs>
+                {/* Draw a smooth spline through segment ratings */}
+                {segments.length > 1 ? (
+                  <path 
+                    d={`M 0 100 ${segments.sort((a,b) => a.startTime - b.startTime).map((seg, i, arr) => {
+                      const x = (seg.startTime / state.duration) * 1000;
+                      const y = 100 - (seg.rating || 0);
+                      // Simplified smoothing: Quad curve to the middle of the segment
+                      const midX = ((seg.startTime + seg.endTime) / 2 / state.duration) * 1000;
+                      return `L ${x} ${y} Q ${midX} ${y} ${(seg.endTime / state.duration) * 1000} ${y}`;
+                    }).join(' ')} L 1000 100 Z`}
+                    fill="url(#intensityGradient)"
+                    stroke="#818cf8"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    className="drop-shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                  />
+                ) : segments.length === 1 && (
+                  <rect 
+                    x={(segments[0].startTime / state.duration) * 1000} 
+                    y={100 - segments[0].rating} 
+                    width={((segments[0].endTime - segments[0].startTime) / state.duration) * 1000} 
+                    height={segments[0].rating} 
+                    fill="url(#intensityGradient)"
+                    stroke="#818cf8"
+                    strokeWidth="1"
+                  />
+                )}
+             </svg>
+          </div>
+
+          {/* Scene Segments (Genres) - Colored Rail */}
+          <div className="absolute top-0 left-0 w-full h-1.5 z-20 flex overflow-hidden rounded-full">
              {segments.map(seg => {
                 const startPct = (seg.startTime / state.duration) * 100;
                 const endPct = (seg.endTime / state.duration) * 100;
                 const width = Math.max(0.1, endPct - startPct);
-                const color = getGenreColor(seg.type);
-                
-                return (
-                  <div 
-                    key={`intensity-${seg.id}`}
-                    className="absolute bottom-0 border-t-2 transition-all duration-300"
-                    style={{ 
-                      left: `${startPct}%`,
-                      width: `${width}%`,
-                      height: `${(seg.rating || 0)}%`,
-                      borderColor: color,
-                      background: `linear-gradient(to top, ${color}22, transparent)`
-                    }}
-                  />
-                );
-             })}
-          </div>
-
-          {/* Scene Segments (Genres) - Colored Bars */}
-          <div className="absolute top-0 left-0 w-full h-1.5 z-20">
-             {segments.map(seg => {
-                const startPct = (seg.startTime / state.duration) * 100;
-                const endPct = (seg.endTime / state.duration) * 100;
-                const width = Math.max(0.5, endPct - startPct);
                 
                 return (
                   <div 
                     key={seg.id}
-                    className="absolute top-0 h-full rounded-full shadow-[0_0_5px_rgba(0,0,0,0.5)] hover:h-2 transition-all cursor-help"
+                    className="h-full transition-all cursor-help relative group/seg"
                     style={{ 
-                      left: `${startPct}%`,
                       width: `${width}%`,
                       backgroundColor: getGenreColor(seg.type)
                     }}
                     title={`${seg.type.toUpperCase()}: ${formatTime(seg.startTime)} - ${formatTime(seg.endTime)}`}
-                  />
+                  >
+                      <div className="absolute inset-0 bg-white opacity-0 group-hover/seg:opacity-20 transition-opacity" />
+                  </div>
                 );
              })}
           </div>
 
-          {/* Audio Heatmap Layer (Background Waveform) */}
-          <div className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-8 flex items-end gap-[1px] opacity-60 z-0 pointer-events-none">
-             {state.audioHeatmap ? (
-                 state.audioHeatmap.map((amp, i) => {
-                     // Color gradient: Quiet (Blue/Cyan) -> Loud (Red/Orange)
-                     const isLoud = amp > 0.6;
-                     const color = isLoud ? `rgba(239, 68, 68, ${0.4 + amp * 0.6})` : `rgba(59, 130, 246, ${0.3 + amp * 0.3})`;
-                     return (
-                         <div 
-                            key={i} 
-                            style={{ 
-                                width: `${100 / state.audioHeatmap!.length}%`, 
-                                height: `${Math.max(10, amp * 100)}%`,
-                                backgroundColor: color
-                            }} 
-                            className="rounded-t-sm transition-all duration-300"
-                         />
-                     );
-                 })
-             ) : (
-                /* Fallback Heatmap using shots if audio not analyzed yet */
-                shots.map((shot) => {
-                    const intensity = shot.motionScore ? shot.motionScore : 0; 
-                    const color = `rgba(${50 + intensity * 200}, ${50}, ${150 - intensity * 100}, 0.2)`;
-                    const width = ((shot.endTime - shot.startTime) / state.duration) * 100;
+          {/* Audio Intelligence Layer (Continuous Pulse Waveform) */}
+          <div className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-10 opacity-60 z-0 pointer-events-none">
+             <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 100">
+                {state.audioHeatmap ? (
+                  <path 
+                    d={`M 0 50 ${state.audioHeatmap.map((amp, i) => {
+                      const x = (i / (state.audioHeatmap!.length - 1)) * 1000;
+                      const y = 50 - (amp * 40); // Top half
+                      const y2 = 50 + (amp * 40); // Bottom half (mirror)
+                      return `L ${x} ${y}`;
+                    }).join(' ')} ${[...state.audioHeatmap].reverse().map((amp, i) => {
+                      const x = ((state.audioHeatmap!.length - 1 - i) / (state.audioHeatmap!.length - 1)) * 1000;
+                      const y2 = 50 + (amp * 40);
+                      return `L ${x} ${y2}`;
+                    }).join(' ')} Z`}
+                    fill="rgba(99, 102, 241, 0.3)"
+                    stroke="rgba(129, 140, 248, 0.5)"
+                    strokeWidth="1"
+                  />
+                ) : (
+                  /* Fallback using shot motion data if audio not ready */
+                  shots.map((shot, i) => {
+                    const startPct = (shot.startTime / state.duration) * 1000;
+                    const widthPct = ((shot.endTime - shot.startTime) / state.duration) * 1000;
+                    const intensity = shot.motionScore || 0.2;
                     return (
-                        <div 
-                            key={shot.id} 
-                            style={{ width: `${width}%`, backgroundColor: color, height: '40%' }} 
-                        />
+                      <rect 
+                        key={shot.id} 
+                        x={startPct} y={50 - intensity * 20} 
+                        width={widthPct} height={intensity * 40} 
+                        fill="rgba(99, 102, 241, 0.1)" 
+                      />
                     );
-                })
-             )}
+                  })
+                )}
+             </svg>
           </div>
 
           {/* Buffered Bar */}
@@ -397,7 +416,10 @@ const VideoControls: React.FC<VideoControlsProps> = ({
             style={{ width: `${state.progress}%` }}
           >
              {/* Handle */}
-             <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full scale-0 group-hover:scale-100 transition-transform shadow-[0_0_15px_rgba(255,255,255,0.8)] border-2 border-indigo-500" />
+             <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full scale-0 group-hover:scale-100 transition-all shadow-[0_0_15px_rgba(255,255,255,0.8)] border-2 border-indigo-500 z-30" />
+             
+             {/* Vertical Playhead (Reference Image Style) */}
+             <div className="absolute right-0 bottom-1/2 w-px h-24 bg-white/40 pointer-events-none z-20" />
           </div>
           
           <input 
