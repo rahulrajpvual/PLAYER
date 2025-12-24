@@ -740,6 +740,32 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       setState(prev => ({...prev, inPoint: null, outPoint: null}));
   };
 
+  // --- Segment Management with Conflict Resolution ---
+  const resolveSegmentOverlaps = (newSeg: SceneSegment, existing: SceneSegment[]): SceneSegment[] => {
+      const result: SceneSegment[] = [];
+      existing.forEach(seg => {
+          // If existing segment is outside the new segment, keep it
+          if (seg.endTime <= newSeg.startTime || seg.startTime >= newSeg.endTime) {
+              result.push(seg);
+          }
+          // If existing segment is partially inside the new segment, truncate it
+          else if (seg.startTime < newSeg.startTime && seg.endTime > newSeg.endTime) {
+              // Split into two
+              result.push({ ...seg, id: seg.id + '_1', endTime: newSeg.startTime });
+              result.push({ ...seg, id: seg.id + '_2', startTime: newSeg.endTime });
+          }
+          else if (seg.startTime < newSeg.startTime) {
+              result.push({ ...seg, endTime: newSeg.startTime });
+          }
+          else if (seg.endTime > newSeg.endTime) {
+              result.push({ ...seg, startTime: newSeg.endTime });
+          }
+          // If completely covered, it's removed (not added back to result)
+      });
+      result.push(newSeg);
+      return result.filter(s => s.endTime - s.startTime > 0.01).sort((a, b) => a.startTime - b.startTime);
+  };
+
   const finalizePendingSegment = useCallback(() => {
       setPendingSegment(pending => {
           if (pending) {
@@ -750,15 +776,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                   type: pending.type,
                   rating: currentRatingRef.current // Use ref for latest rating
               };
-              setSegments(prev => [...prev, newSeg].sort((a,b) => b.startTime - a.startTime));
+              
+              const resolved = resolveSegmentOverlaps(newSeg, segmentsRef.current);
+              setSegments(resolved);
+              
+              // Sync to cloud: For true integrity, we save the resulting set
+              // In this prototype, we save the new segment. 
+              // To handle deletions/splits in cloud, we'd need a multi-save or clear-and-save.
               saveToCloud(`segments_${file.name}`, newSeg);
+              
               logInteraction('segment', { type: pending.type, rating: currentRatingRef.current });
               showFeedback(<div className="flex flex-col items-center uppercase"><Check size={40} className="text-green-500" /><span className="text-xs font-black">{pending.type} Finalized</span></div>);
           }
           return null;
       });
       setCountdown(0);
-  }, [file.name, logInteraction]);
+  }, [file.name, resolveSegmentOverlaps, logInteraction]);
 
   const addSceneSegment = useCallback((type: SceneType) => {
       // Logic used by UI buttons - triggers immediately
@@ -789,14 +822,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
           rating: currentRatingRef.current
       };
       
-      const updatedSegments = [...segmentsRef.current, newSeg].sort((a,b) => b.startTime - a.startTime);
-      setSegments(updatedSegments);
+      const resolved = resolveSegmentOverlaps(newSeg, segmentsRef.current);
+      setSegments(resolved);
       saveToCloud(`segments_${file.name}`, newSeg);
       
       clearMarks();
       setCurrentRating(50); 
       showFeedback(<div className="flex flex-col items-center uppercase"><span className="text-2xl font-black">{type}</span><span className="text-xs">Segment Added</span></div>);
-  }, [file.name]);
+  }, [file.name, resolveSegmentOverlaps]);
 
   const triggerSceneSegment = useCallback((type: SceneType) => {
       // If one is already pending, finalize it first

@@ -290,14 +290,31 @@ const VideoControls: React.FC<VideoControlsProps> = ({
                 </defs>
                 {/* Draw a smooth spline through segment ratings */}
                 {segments.length > 1 ? (
-                  <path 
-                    d={`M 0 100 ${segments.sort((a,b) => a.startTime - b.startTime).map((seg, i, arr) => {
-                      const x = (seg.startTime / state.duration) * 1000;
-                      const y = 100 - (seg.rating || 0);
-                      // Simplified smoothing: Quad curve to the middle of the segment
-                      const midX = ((seg.startTime + seg.endTime) / 2 / state.duration) * 1000;
-                      return `L ${x} ${y} Q ${midX} ${y} ${(seg.endTime / state.duration) * 1000} ${y}`;
-                    }).join(' ')} L 1000 100 Z`}
+                   <path 
+                     d={`M 0 100 ${segments
+                       .sort((a,b) => a.startTime - b.startTime)
+                       .reduce((acc: any[], seg) => {
+                           const lastEnd = acc.length > 0 ? acc[acc.length - 1].endTime : -1;
+                           if (seg.startTime >= lastEnd) acc.push(seg);
+                           return acc;
+                       }, [])
+                       .map((seg, i, arr) => {
+                         const x = (seg.startTime / state.duration) * 1000;
+                         const y = 100 - (seg.rating || 0);
+                         const endX = (seg.endTime / state.duration) * 1000;
+                         
+                         if (i === 0) return `L 0 ${y} L ${x} ${y} L ${endX} ${y}`;
+                         
+                         const prev = arr[i-1];
+                         const prevEndX = (prev.endTime / state.duration) * 1000;
+                         const prevY = 100 - (prev.rating || 0);
+                         
+                         // Smooth S-curve transition
+                         const cp1x = prevEndX + (x - prevEndX) / 2;
+                         const cp2x = prevEndX + (x - prevEndX) / 2;
+                         
+                         return `C ${cp1x} ${prevY}, ${cp2x} ${y}, ${x} ${y} L ${endX} ${y}`;
+                       }).join(' ')} L 1000 100 Z`}
                     fill="url(#intensityGradient)"
                     stroke="#818cf8"
                     strokeWidth="2"

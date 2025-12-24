@@ -533,7 +533,12 @@ const App: React.FC = () => {
 
   const selectedMovieData = useMemo(() => {
       if(!selectedAnalysisMovie) return null;
-      return storyboards.find(s => s.filename === selectedAnalysisMovie);
+      const data = storyboards.find(s => s.filename === selectedAnalysisMovie);
+      if (data && (!data.duration || data.duration === 0) && data.segments && data.segments.length > 0) {
+          const maxEnd = Math.max(...data.segments.map(s => s.endTime));
+          return { ...data, duration: maxEnd };
+      }
+      return data;
   }, [selectedAnalysisMovie, storyboards]);
 
   const movieGenreData = useMemo(() => {
@@ -1298,18 +1303,23 @@ const App: React.FC = () => {
                                     <div className="flex items-center gap-3 mb-6 font-black text-gray-400 uppercase text-xs tracking-widest"><Layers size={16}/> Structural Composition</div>
                                     <div className="space-y-6">
                                         {movieGenreData.length > 0 ? (
-                                            <div className="space-y-5">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                                                 {movieGenreData.map((genre) => (
-                                                    <div key={genre.name} className="space-y-2">
+                                                    <div key={genre.name} className="space-y-3">
                                                         <div className="flex justify-between items-end">
-                                                            <div className="text-[10px] font-black uppercase text-gray-300 tracking-wider font-mono">{genre.name}</div>
-                                                            <div className="text-[10px] font-black text-gray-500">{Math.round((genre.value / (selectedMovieData.duration || 1)) * 100)}%</div>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className={`w-2 h-2 rounded-full ${getSceneColor(genre.name).replace('bg-', 'bg-')}`} />
+                                                                <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{genre.name}</span>
+                                                            </div>
+                                                            <div className="text-[10px] font-black text-indigo-400">{Math.round((genre.value / (selectedMovieData.duration || 1)) * 100)}%</div>
                                                         </div>
-                                                        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                                        <div className="h-2 bg-white/5 rounded-full overflow-hidden relative">
                                                             <div 
-                                                                className={`h-full ${getSceneColor(genre.name)} shadow-[0_0_10px_rgba(255,255,255,0.1)]`} 
+                                                                className={`h-full ${getSceneColor(genre.name)} shadow-[0_0_15px_rgba(255,255,255,0.1)] transition-all duration-1000`} 
                                                                 style={{ width: `${(genre.value / (selectedMovieData.duration || 1)) * 100}%` }}
-                                                            ></div>
+                                                            >
+                                                                <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -1322,28 +1332,120 @@ const App: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl">
-                                    <div className="flex items-center gap-3 mb-6 font-black text-gray-400 uppercase text-xs tracking-widest"><TrendingUp size={16}/> Cinematic Intensity (Logged Ratings)</div>
-                                    <div className="h-32 w-full bg-black/50 rounded-xl border border-white/10 relative overflow-hidden flex items-end px-2">
-                                        {selectedMovieData.segments?.map(seg => (
-                                            <div 
-                                                key={seg.id}
-                                                className={`absolute bottom-0 border-l border-white/10 transition-all group cursor-help ${getSceneColor(seg.type)} opacity-40 hover:opacity-100 flex items-end justify-center`}
-                                                style={{
-                                                    left: `${(seg.startTime / (selectedMovieData.duration || 1)) * 100}%`,
-                                                    width: `${Math.max(0.5, ((seg.endTime - seg.startTime) / (selectedMovieData.duration || 1)) * 100)}%`,
-                                                    height: `${seg.rating || 0}%`
-                                                }}
-                                            >
-                                                <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black border border-white/10 p-2 rounded text-[10px] whitespace-nowrap z-20 shadow-2xl pointer-events-none">
-                                                    <div className="font-black text-indigo-400">{seg.type.toUpperCase()}</div>
-                                                    <div className="text-white font-mono">{seg.rating}/100 Intensity</div>
-                                                    <div className="text-gray-500">{Math.floor(seg.startTime / 60)}m {Math.floor(seg.startTime % 60)}s</div>
+                                <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
+                                    <div className="flex items-center justify-between mb-8">
+                                        <div className="flex items-center gap-3 font-black text-gray-400 uppercase text-xs tracking-widest">
+                                            <TrendingUp size={16} className="text-indigo-500" /> 
+                                            Cinematic Pulse (Continuous)
+                                        </div>
+                                        <div className="text-[10px] font-black text-gray-600 uppercase tracking-widest">X-Axis: Timeline | Y-Axis: Intensity</div>
+                                    </div>
+
+                                    <div className="h-64 w-full bg-black/40 rounded-2xl border border-white/5 relative overflow-visible mt-4">
+                                        {/* Premium Continuous Waveform SVG */}
+                                        <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 100">
+                                            <defs>
+                                                <linearGradient id="insightsIntensityGrad" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor="#6366f1" stopOpacity="0.5" />
+                                                    <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+                                                </linearGradient>
+                                                <filter id="insightsGlow">
+                                                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                                    <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                                                </filter>
+                                            </defs>
+
+                                            {selectedMovieData.segments && selectedMovieData.segments.length > 0 ? (
+                                                <>
+                                                    {/* Background Area Fill */}
+                                                    <path 
+                                                        d={`M 0 100 ${selectedMovieData.segments
+                                                            .sort((a,b) => a.startTime - b.startTime)
+                                                            .reduce((acc: any[], seg: any) => {
+                                                                const lastEnd = acc.length > 0 ? acc[acc.length - 1].endTime : -1;
+                                                                if (seg.startTime >= lastEnd) acc.push(seg);
+                                                                return acc;
+                                                            }, [])
+                                                            .map((seg: any, i: number, arr: any[]) => {
+                                                                const x = (seg.startTime / (selectedMovieData.duration || 1)) * 1000;
+                                                                const y = 100 - (seg.rating || 10);
+                                                                const endX = (seg.endTime / (selectedMovieData.duration || 1)) * 1000;
+                                                                
+                                                                if (i === 0) return `L 0 ${y} L ${x} ${y} L ${endX} ${y}`;
+                                                                
+                                                                const prev = arr[i-1];
+                                                                const prevEndX = (prev.endTime / (selectedMovieData.duration || 1)) * 1000;
+                                                                const prevY = 100 - (prev.rating || 10);
+                                                                const cp1x = prevEndX + (x - prevEndX) / 2;
+                                                                const cp2x = prevEndX + (x - prevEndX) / 2;
+                                                                
+                                                                return `C ${cp1x} ${prevY}, ${cp2x} ${y}, ${x} ${y} L ${endX} ${y}`;
+                                                            }).join(' ')} L 1000 100 Z`}
+                                                        fill="url(#insightsIntensityGrad)"
+                                                        className="transition-all duration-1000"
+                                                    />
+                                                    {/* The Main Spline Path */}
+                                                    <path 
+                                                        d={`M 0 100 ${selectedMovieData.segments
+                                                            .sort((a,b) => a.startTime - b.startTime)
+                                                            .reduce((acc: any[], seg: any) => {
+                                                                const lastEnd = acc.length > 0 ? acc[acc.length - 1].endTime : -1;
+                                                                if (seg.startTime >= lastEnd) acc.push(seg);
+                                                                return acc;
+                                                            }, [])
+                                                            .map((seg: any, i: number, arr: any[]) => {
+                                                                const x = (seg.startTime / (selectedMovieData.duration || 1)) * 1000;
+                                                                const y = 100 - (seg.rating || 10);
+                                                                const endX = (seg.endTime / (selectedMovieData.duration || 1)) * 1000;
+                                                                
+                                                                if (i === 0) return `L 0 ${y} L ${x} ${y} L ${endX} ${y}`;
+                                                                
+                                                                const prev = arr[i-1];
+                                                                const prevEndX = (prev.endTime / (selectedMovieData.duration || 1)) * 1000;
+                                                                const prevY = 100 - (prev.rating || 10);
+                                                                const cp1x = prevEndX + (x - prevEndX) / 2;
+                                                                const cp2x = prevEndX + (x - prevEndX) / 2;
+                                                                
+                                                                return `C ${cp1x} ${prevY}, ${cp2x} ${y}, ${x} ${y} L ${endX} ${y}`;
+                                                            }).join(' ')} L 1000 100 Z`}
+                                                        fill="none"
+                                                        stroke="#818cf8"
+                                                        strokeWidth="2.5"
+                                                        strokeLinecap="round"
+                                                        filter="url(#insightsGlow)"
+                                                        className="transition-all duration-1000"
+                                                    />
+                                                </>
+                                            ) : null}
+                                        </svg>
+
+                                        {/* Overlay Interactive Regions (for tooltips) */}
+                                        <div className="absolute inset-0 flex">
+                                            {selectedMovieData.segments?.map(seg => (
+                                                <div 
+                                                    key={seg.id}
+                                                    className="h-full hover:bg-white/5 transition-all group flex items-end justify-center cursor-crosshair z-10"
+                                                    style={{ width: `${((seg.endTime - seg.startTime) / (selectedMovieData.duration || 1)) * 100}%` }}
+                                                >
+                                                    {/* Tooltip on Hover */}
+                                                    <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-4 left-1/2 -translate-x-1/2 bg-[#0a0a0a] border border-white/10 p-4 rounded-2xl text-[10px] whitespace-nowrap z-50 shadow-[0_20px_50px_rgba(0,0,0,0.8)] pointer-events-none scale-90 group-hover:scale-100 transition-all">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <div className={`w-2 h-2 rounded-full ${getSceneColor(seg.type)}`} />
+                                                            <span className="font-black text-indigo-400 uppercase tracking-widest">{seg.type}</span>
+                                                        </div>
+                                                        <div className="text-3xl font-[1000] text-white tabular-nums mb-1">{seg.rating}<span className="text-xs text-gray-600 ml-1">INTENSITY</span></div>
+                                                        <div className="flex items-center gap-4 text-gray-500 font-bold">
+                                                            <span>{Math.floor(seg.startTime / 60)}:{(seg.startTime % 60).toString().padStart(2, '0')}</span>
+                                                            <ArrowRight size={10} />
+                                                            <span>{Math.floor(seg.endTime / 60)}:{(seg.endTime % 60).toString().padStart(2, '0')}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
+
                                         {(!selectedMovieData.segments || selectedMovieData.segments.length === 0) && (
-                                            <div className="absolute inset-0 flex items-center justify-center text-[10px] text-gray-700 font-black uppercase tracking-widest">No Intensity Data</div>
+                                            <div className="absolute inset-0 flex items-center justify-center text-[10px] text-gray-700 font-black uppercase tracking-widest">Initialization Required: No Intensity Data</div>
                                         )}
                                     </div>
                                 </div>
@@ -1365,25 +1467,37 @@ const App: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {selectedMovieData.heatmap && (
-                                    <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl">
-                                        <div className="flex items-center gap-3 mb-6 font-black text-gray-400 uppercase text-xs tracking-widest"><Activity size={16}/> Attention Heatmap</div>
-                                        <div className="h-32 flex items-end gap-[1px]">
-                                            {selectedMovieData.heatmap.map((val, i) => (
-                                                <div 
-                                                    key={i} 
-                                                    className={`flex-1 transition-all rounded-t-sm ${val === 0 ? 'bg-white/5' : 'bg-indigo-500 hover:bg-indigo-400'}`} 
-                                                    style={{ height: `${Math.max(4, Math.min(100, val * 10))}%` }}
-                                                />
-                                            ))}
+                                    {selectedMovieData.heatmap && (
+                                        <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
+                                            <div className="flex items-center gap-3 mb-8 font-black text-gray-400 uppercase text-xs tracking-widest"><Activity size={16} className="text-emerald-500" /> Attention Heatmap (Engagement)</div>
+                                            <div className="h-32 w-full bg-black/40 rounded-xl relative overflow-visible">
+                                                <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 100">
+                                                    <defs>
+                                                        <linearGradient id="attentionGrad" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+                                                            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <path 
+                                                        d={`M 0 100 ${selectedMovieData.heatmap.map((val, i) => {
+                                                            const x = (i / (selectedMovieData.heatmap!.length - 1)) * 1000;
+                                                            const y = 100 - (val * 8); // Scale for better visibility
+                                                            return `L ${x} ${Math.min(95, y)}`;
+                                                        }).join(' ')} L 1000 100 Z`}
+                                                        fill="url(#attentionGrad)"
+                                                        stroke="#10b981"
+                                                        strokeWidth="1.5"
+                                                        className="transition-all duration-700"
+                                                    />
+                                                </svg>
+                                            </div>
+                                            <div className="flex justify-between text-[9px] text-gray-600 mt-6 font-black tracking-[0.2em] uppercase px-2">
+                                                <span>Opening Act</span>
+                                                <span className="text-emerald-500/50">Engagement Persistence</span>
+                                                <span>Closing Credits</span>
+                                            </div>
                                         </div>
-                                        <div className="flex justify-between text-[9px] text-gray-600 mt-4 font-black tracking-widest uppercase">
-                                            <span>Start</span>
-                                            <span className="text-indigo-500/50">Engagement Intensity</span>
-                                            <span>End</span>
-                                        </div>
-                                    </div>
-                                )}
+                                    )}
                             </div>
                         </div>
                     ) : (
