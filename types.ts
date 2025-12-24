@@ -96,11 +96,19 @@ export interface AnalysisState {
   error: string | null;
 }
 
+export interface InteractionEvent {
+  type: 'play' | 'pause' | 'seek' | 'exit' | 'segment' | 'note';
+  timestamp: number;
+  videoTime: number;
+  metadata?: any;
+}
+
 export interface ActivityLog {
   id: string;
   filename: string;
   date: number; // timestamp
   durationPlayed: number; // seconds
+  interactions?: InteractionEvent[];
 }
 
 export interface PlannerEntry {

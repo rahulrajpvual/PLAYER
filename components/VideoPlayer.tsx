@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import VideoControls from './VideoControls';
-import { VideoState, AnalysisState, Note, Shot, SceneSegment, SceneType, VisualFilter, AnnotationLine, ActivityLog, MovieMeta, SubtitleTrack, AudioTrackInfo, GridMode } from '../types';
+import { VideoState, AnalysisState, Note, Shot, SceneSegment, SceneType, VisualFilter, AnnotationLine, ActivityLog, MovieMeta, SubtitleTrack, AudioTrackInfo, GridMode, InteractionEvent } from '../types';
 import { 
   X, Activity, StopCircle, Check, ScanEye, Grid3x3, Layout, Target, Scaling, 
   BookOpen, Camera, Trash2, ChevronRight, Image as ImageIcon,
@@ -68,6 +68,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
   const hideControlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionStartTimeRef = useRef<number>(Date.now());
   const attentionHeatmapRef = useRef<number[]>(new Array(100).fill(0)); // 0-100% buckets
+  const interactionHistoryRef = useRef<InteractionEvent[]>([]);
   
   // Audio Context Refs
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -161,6 +162,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
   useEffect(() => { segmentsRef.current = segments; }, [segments]);
   useEffect(() => { currentRatingRef.current = currentRating; }, [currentRating]);
 
+  const logInteraction = useCallback((type: InteractionEvent['type'], metadata?: any) => {
+    if (!videoRef.current) return;
+    interactionHistoryRef.current.push({
+      type,
+      timestamp: Date.now(),
+      videoTime: videoRef.current.currentTime,
+      metadata
+    });
+  }, []);
+
   // Handle countdown effect
   useEffect(() => {
     let interval: any;
@@ -238,12 +249,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       
       const currentFilename = file.name;
 
+      logInteraction('exit');
+
       // Save Activity Log
       const newLog: ActivityLog = {
         id: Date.now().toString(),
         filename: currentFilename,
         date: Date.now(),
-        durationPlayed: durationSeconds
+        durationPlayed: durationSeconds,
+        interactions: interactionHistoryRef.current
       };
       saveToCloud('activity_logs', newLog);
       
@@ -738,12 +752,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
               };
               setSegments(prev => [...prev, newSeg].sort((a,b) => b.startTime - a.startTime));
               saveToCloud(`segments_${file.name}`, newSeg);
+              logInteraction('segment', { type: pending.type, rating: currentRatingRef.current });
               showFeedback(<div className="flex flex-col items-center uppercase"><Check size={40} className="text-green-500" /><span className="text-xs font-black">{pending.type} Finalized</span></div>);
           }
           return null;
       });
       setCountdown(0);
-  }, [file.name]);
+  }, [file.name, logInteraction]);
 
   const addSceneSegment = useCallback((type: SceneType) => {
       // Logic used by UI buttons - triggers immediately
@@ -934,6 +949,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       
       setNotes(prev => [newNote, ...prev].sort((a, b) => b.timestamp - a.timestamp));
       saveToCloud(`notes_${file.name}`, { ...newNote, filename: file.name });
+      logInteraction('note', { text: newNote.text });
   };
 
   const stopDrawing = () => {
@@ -1002,11 +1018,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
         compareVideoRef.current?.pause();
         showFeedback(<Pause size={40} fill="currentColor" />);
         setState(prev => ({ ...prev, isPlaying: false }));
+        logInteraction('pause');
       } else {
         videoRef.current.play();
         compareVideoRef.current?.play();
         showFeedback(<Play size={40} fill="currentColor" />);
         setState(prev => ({ ...prev, isPlaying: true }));
+        logInteraction('play');
       }
     }
   }, []);
@@ -1069,6 +1087,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       videoRef.current.currentTime = time;
       if (compareVideoRef.current) compareVideoRef.current.currentTime = time;
       setState(prev => ({ ...prev, progress: value, currentTime: time }));
+      logInteraction('seek', { to: time });
     }
   };
 
@@ -1642,6 +1661,33 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                                      </div>
                                  ))}
                             </div>
+                        </div>
+
+                        <div className="bg-[#111] p-4 rounded-xl border border-white/5">
+                             <h4 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest">Intensity Mapping</h4>
+                             <div className="h-24 w-full bg-black/50 rounded-lg border border-white/10 relative overflow-hidden flex items-end">
+                                 {segments.map(seg => (
+                                     <div 
+                                         key={seg.id}
+                                         className="absolute bottom-0 bg-indigo-500/40 border-l border-indigo-500/20 hover:bg-indigo-500/60 transition-all cursor-pointer group"
+                                         style={{
+                                             left: `${(seg.startTime / (videoRef.current?.duration || 1)) * 100}%`,
+                                             width: `${Math.max(0.5, ((seg.endTime - seg.startTime) / (videoRef.current?.duration || 1)) * 100)}%`,
+                                             height: `${seg.rating || 0}%`
+                                         }}
+                                         onClick={() => { if(videoRef.current) videoRef.current.currentTime = seg.startTime; }}
+                                     >
+                                         <div className="opacity-0 group-hover:opacity-100 absolute -top-6 left-1/2 -translate-x-1/2 bg-indigo-600 text-[8px] px-1.5 py-0.5 rounded whitespace-nowrap z-10 font-bold">
+                                             {seg.type.toUpperCase()}: {seg.rating}%
+                                         </div>
+                                     </div>
+                                 ))}
+                                 {segments.length === 0 && (
+                                     <div className="absolute inset-0 flex items-center justify-center text-[10px] text-gray-600 uppercase font-black">
+                                         No Intensity Data Logged
+                                     </div>
+                                 )}
+                             </div>
                         </div>
                         
                         <div className="bg-[#111] p-4 rounded-xl border border-white/5">

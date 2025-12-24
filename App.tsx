@@ -1218,6 +1218,49 @@ const App: React.FC = () => {
                                     </div>
                                 </div>
 
+                                <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl">
+                                    <div className="flex items-center gap-3 mb-6 font-black text-gray-400 uppercase text-xs tracking-widest"><TrendingUp size={16}/> Cinematic Intensity (Logged Ratings)</div>
+                                    <div className="h-32 w-full bg-black/50 rounded-xl border border-white/10 relative overflow-hidden flex items-end px-2">
+                                        {selectedMovieData.segments?.map(seg => (
+                                            <div 
+                                                key={seg.id}
+                                                className={`absolute bottom-0 border-l border-white/10 transition-all group cursor-help ${getSceneColor(seg.type)} opacity-40 hover:opacity-100 flex items-end justify-center`}
+                                                style={{
+                                                    left: `${(seg.startTime / (selectedMovieData.duration || 1)) * 100}%`,
+                                                    width: `${Math.max(0.5, ((seg.endTime - seg.startTime) / (selectedMovieData.duration || 1)) * 100)}%`,
+                                                    height: `${seg.rating || 0}%`
+                                                }}
+                                            >
+                                                <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black border border-white/10 p-2 rounded text-[10px] whitespace-nowrap z-20 shadow-2xl pointer-events-none">
+                                                    <div className="font-black text-indigo-400">{seg.type.toUpperCase()}</div>
+                                                    <div className="text-white font-mono">{seg.rating}/100 Intensity</div>
+                                                    <div className="text-gray-500">{Math.floor(seg.startTime / 60)}m {Math.floor(seg.startTime % 60)}s</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {(!selectedMovieData.segments || selectedMovieData.segments.length === 0) && (
+                                            <div className="absolute inset-0 flex items-center justify-center text-[10px] text-gray-700 font-black uppercase tracking-widest">No Intensity Data</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl">
+                                    <div className="flex items-center gap-3 mb-6 font-black text-gray-400 uppercase text-xs tracking-widest"><MonitorPlay size={16}/> Interaction Behavior</div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {['play', 'pause', 'seek', 'exit'].map(type => {
+                                            const count = activityLogs
+                                               .filter(l => l.filename === selectedMovieData.filename)
+                                               .reduce((acc, l) => acc + (l.interactions?.filter(i => i.type === type).length || 0), 0);
+                                            return (
+                                                <div key={type} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col gap-1 items-center justify-center">
+                                                    <div className="text-[10px] text-gray-500 font-black uppercase tracking-wider">{type} Events</div>
+                                                    <div className="text-3xl font-[1000] text-white italic">{count}</div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
                                 {selectedMovieData.heatmap && (
                                     <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl">
                                         <div className="flex items-center gap-3 mb-6 font-black text-gray-400 uppercase text-xs tracking-widest"><Activity size={16}/> Attention Heatmap</div>
