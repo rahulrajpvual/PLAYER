@@ -585,7 +585,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
     const scanVideo = document.createElement('video');
     scanVideo.src = URL.createObjectURL(file);
     scanVideo.muted = true;
-    scanVideo.playsInline = true;
+    scanVideo.playsInline = true; // Crucial for iOS/Mobile
     scanVideo.crossOrigin = "anonymous";
     
     const scanCanvas = document.createElement('canvas');
@@ -1443,7 +1443,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
           {/* Pending Segment HUD */}
           {pendingSegment && (
               <div className="absolute top-12 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4">
-                  <div className="bg-black/80 backdrop-blur-xl border border-indigo-500/30 px-6 py-4 rounded-2xl flex items-center gap-6 shadow-[0_0_50px_rgba(99,102,241,0.2)]">
+                  <div className="bg-[#0a0a0a]/90 backdrop-blur-sm border border-indigo-500/30 px-6 py-4 rounded-none flex items-center gap-6 shadow-none">
                       <div className="flex flex-col">
                           <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-1">Pending Entry</span>
                           <span className="text-2xl font-[1000] text-white uppercase italic leading-none">{pendingSegment.type}</span>
@@ -1551,11 +1551,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
             <div className="flex-1 overflow-y-auto pb-20 p-4 custom-scrollbar">
                 {activeSidebarTab === 'storyboard' && (
                     <div className="space-y-4">
-                        <button onClick={() => addNote()} className="w-full py-3 bg-white/5 border border-white/10 rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-white/10 transition-colors">
+                        <button onClick={() => addNote()} className="w-full py-3 bg-white/5 border border-white/10 rounded-none text-sm font-bold flex items-center justify-center gap-2 hover:bg-white/10 transition-colors uppercase tracking-widest">
                             <Plus size={16} /> Add Timestamped Note
                         </button>
                         {notes.map(note => (
-                            <div key={note.id} className="bg-[#111] p-3 rounded-lg border border-white/5 group">
+                            <div key={note.id} className="bg-[#0a0a0a] p-3 rounded-none border border-white/5 group">
                                 <div className="flex justify-between items-start mb-2">
                                     <span 
                                         onClick={() => { if(videoRef.current) videoRef.current.currentTime = note.timestamp; }}
@@ -1565,7 +1565,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                                     </span>
                                     <button onClick={() => setNotes(notes.filter(n => n.id !== note.id))} className="text-gray-600 hover:text-red-500"><Trash2 size={12} /></button>
                                 </div>
-                                {note.thumbnail && <img src={note.thumbnail} className="w-full h-20 object-cover rounded mb-2 opacity-80" />}
+                                {note.thumbnail && <img src={note.thumbnail} className="w-full h-20 object-cover rounded-none mb-2 opacity-80" />}
                                 <textarea 
                                     className="w-full bg-transparent text-sm text-gray-300 focus:outline-none resize-none"
                                     rows={2}
@@ -1582,7 +1582,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                 {activeSidebarTab === 'scenes' && (
                     <div className="space-y-4">
                         {/* 0-100 Rating Slider Component */}
-                        <div className="bg-[#111] p-4 rounded-xl border border-white/5 flex flex-col gap-3 mb-4 shadow-inner">
+                        <div className="bg-[#0a0a0a] p-4 rounded-none border border-white/5 flex flex-col gap-3 mb-4">
                             <div className="flex justify-between items-center">
                                 <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Rate This Moment</div>
                                 <div className="flex items-center gap-1.5">
@@ -1602,10 +1602,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                                     step="1"
                                     value={currentRating} 
                                     onChange={(e) => setCurrentRating(parseInt(e.target.value))}
-                                    className="w-full h-1.5 bg-white/5 rounded-full appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
+                                    className="w-full h-1 bg-white/10 rounded-none appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
                                 />
                                 {/* Track highlights */}
-                                <div className="absolute inset-x-0 h-1.5 bg-indigo-500/20 rounded-full pointer-events-none" style={{ width: `${currentRating}%` }}></div>
+                                <div className="absolute inset-x-0 h-1 bg-indigo-500/50 rounded-none pointer-events-none" style={{ width: `${currentRating}%` }}></div>
                             </div>
                             
                             <div className="flex justify-between text-[8px] font-black text-gray-600 uppercase tracking-tighter">
@@ -1620,10 +1620,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                                     <button 
                                         key={type}
                                         onClick={() => addSceneSegment(type)}
-                                        className="group/btn px-2 py-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-lg flex flex-col items-center gap-1 transition-all active:scale-95 overflow-hidden relative"
+                                        className="group/btn px-2 py-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-none flex flex-col items-center gap-1 transition-all active:scale-95 overflow-hidden relative"
                                     >
                                          <div 
-                                           className="w-2 h-2 rounded-full transition-shadow group-hover/btn:shadow-[0_0_8px_currentColor]" 
+                                           className="w-2 h-2 rounded-none transition-shadow group-hover/btn:shadow-[0_0_8px_currentColor]" 
                                            style={{ 
                                              backgroundColor: 
                                                type === 'action' ? '#ef4444' : 
@@ -1673,13 +1673,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                         
                         <div className="space-y-2 mt-4">
                             {segments.map(seg => (
-                                <div key={seg.id} className="bg-[#111] p-3 rounded-lg border border-white/5 flex gap-3 group/seg">
-                                    <div className="w-1 bg-white/20 rounded-full group-hover/seg:bg-indigo-500 transition-colors"></div>
+                                <div key={seg.id} className="bg-[#0a0a0a] p-3 rounded-none border border-white/5 flex gap-3 group/seg">
+                                    <div className="w-1 bg-white/20 rounded-none group-hover/seg:bg-indigo-500 transition-colors"></div>
                                     <div className="flex-1">
                                         <div className="flex justify-between items-center mb-1">
                                             <span className="text-xs font-black uppercase text-white">{seg.type}</span>
                                             {seg.rating !== undefined && (
-                                                <div className="flex items-center gap-1.5 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full">
+                                                <div className="flex items-center gap-1.5 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-none">
                                                     <Zap size={8} className="text-indigo-400 fill-indigo-400" />
                                                     <span className="text-[10px] font-black text-indigo-400">{seg.rating}</span>
                                                 </div>
@@ -1717,23 +1717,23 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                 
                 {activeSidebarTab === 'monitor' && (
                     <div className="space-y-6">
-                        <div className="bg-[#111] p-4 rounded-xl border border-white/5">
+                        <div className="bg-[#0a0a0a] p-4 rounded-none border border-white/5">
                             <h4 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest">Realtime Waveform</h4>
-                            <canvas ref={monitorCanvasRef} width={240} height={80} className="w-full h-24 bg-black/50 rounded-lg border border-white/10" />
+                            <canvas ref={monitorCanvasRef} width={240} height={80} className="w-full h-24 bg-black/50 rounded-none border border-white/10" />
                             <div className="flex justify-between text-[9px] text-gray-600 mt-2 font-mono">
                                 <span>-60f</span>
                                 <span>LIVE</span>
                             </div>
                         </div>
 
-                        <div className="bg-[#111] p-4 rounded-xl border border-white/5">
+                        <div className="bg-[#0a0a0a] p-4 rounded-none border border-white/5">
                             <h4 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest">Color Histogram</h4>
-                            <div className="flex h-12 gap-px mb-2 overflow-hidden rounded-md bg-black/40">
+                            <div className="flex h-12 gap-px mb-2 overflow-hidden rounded-none bg-black/40">
                                  {realtimeColors.avg.map((c, i) => (
                                      <div key={i} className="flex-1" style={{ backgroundColor: c }} title={c} />
                                  ))}
                              </div>
-                             <div className="h-32 w-full bg-black/50 rounded-lg border border-white/10 relative overflow-hidden">
+                             <div className="h-32 w-full bg-black/50 rounded-none border border-white/10 relative overflow-hidden">
                                  <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
                                      {/* Red Channel */}
                                      <path 
@@ -1754,9 +1754,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                              </div>
                         </div>
 
-                        <div className="bg-[#111] p-4 rounded-xl border border-white/5">
+                        <div className="bg-[#0a0a0a] p-4 rounded-none border border-white/5">
                              <h4 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest">Intensity Mapping</h4>
-                             <div className="h-24 w-full bg-black/50 rounded-lg border border-white/10 relative overflow-visible">
+                             <div className="h-24 w-full bg-black/50 rounded-none border border-white/10 relative overflow-visible">
                                  <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 100">
                                      <defs>
                                          <linearGradient id="sidebarIntensityGrad" x1="0" y1="0" x2="0" y2="1">
@@ -1799,7 +1799,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                              </div>
                         </div>
                         
-                        <div className="bg-[#111] p-4 rounded-xl border border-white/5">
+                        <div className="bg-[#0a0a0a] p-4 rounded-none border border-white/5">
                              <div className="flex justify-between items-center mb-4">
                                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Color Barcode</h4>
                                 <button 
@@ -1810,7 +1810,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                                     {isScanningColors ? `${scanProgress}%` : 'GENERATE'}
                                 </button>
                              </div>
-                             <div className="h-40 w-full flex bg-black rounded-lg overflow-hidden relative">
+                             <div className="h-40 w-full flex bg-black rounded-none overflow-hidden relative">
                                  {colorBarcode.map((bar, i) => (
                                      <div 
                                         key={i} 
@@ -1834,7 +1834,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
 
        {/* Top Bar (Close) */}
        <div className="absolute top-0 left-0 p-4 z-50">
-           <button onClick={onClose} className="bg-black/50 p-2 rounded-full hover:bg-white text-white hover:text-black transition-colors"><X size={20}/></button>
+           <button onClick={onClose} className="bg-black/50 p-2 border border-white/20 hover:bg-white text-white hover:text-black transition-colors rounded-none"><X size={20}/></button>
        </div>
 
        {/* Hidden File Input for Subtitles */}
