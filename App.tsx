@@ -8,11 +8,11 @@ import {
   PlayCircle, FolderPlus, Folder, ChevronRight, ChevronDown, MoreVertical, 
   Search, BookOpen, BarChart3, TrendingUp, Star, Calendar as CalendarIcon, 
   MonitorPlay, Clapperboard, RefreshCcw, LogOut, ChevronLeft, Plus, CheckCircle2, XCircle,
-  Activity, Tv, Monitor, Disc, Database, Ticket, Play, ArrowRight, Flame
+  Activity, Tv, Monitor, Disc, Database, Ticket, Play, ArrowRight, Flame,
+  Globe, Lightbulb, Hash, X
 } from 'lucide-react';
 import { Note, SceneSegment, ActivityLog, MovieMeta, PlannerEntry, StoredStoryboard, StoryIdea } from './types';
 import { tmdbService } from './services/tmdbService';
-import { Globe, BookOpen as BookIcon, Lightbulb, Hash } from 'lucide-react';
 
 // --- Helpers ---
 const formatMovieName = (filename: string): string => {
@@ -691,140 +691,135 @@ const App: React.FC = () => {
             <div className="flex-1 pb-12">
               {activeTab === 'home' && (
                 <div className="animate-in fade-in duration-1000 pt-32 px-4 md:px-12 space-y-16 pb-32">
-                  {/* HERO BENTO GRID */}
-                  <div className="grid grid-cols-1 lg:grid-cols-4 lg:grid-rows-2 gap-6 h-auto lg:h-[700px]">
-                    {/* Main Feature: Studio Hub */}
-                    <div className="lg:col-span-2 lg:row-span-2 relative rounded-[3rem] overflow-hidden group shadow-2xl border border-white/5">
-                        <img 
-                          src="/cinematic_studio_hero.png" 
-                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-[20s] group-hover:scale-110 brightness-75 scale-105"
-                          alt="Studio Hero"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
-                        
-                        <div className="absolute inset-0 p-10 md:p-16 flex flex-col justify-end">
+                  {/* HERO: Technical Overview Board */}
+                  <div className="grid grid-cols-1 lg:grid-cols-4 lg:grid-rows-2 gap-6 h-auto lg:h-[600px]">
+                    {/* Main Module: System Status */}
+                    <div className="lg:col-span-2 lg:row-span-2 relative rounded-lg border border-white/5 bg-[#0a0a0a] overflow-hidden p-10 flex flex-col justify-between group hover:border-white/10 transition-colors">
+                        <div className="absolute top-0 right-0 p-4 opacity-50">
+                             <div className="grid grid-cols-3 gap-1">
+                                 {Array.from({length: 9}).map((_, i) => (
+                                     <div key={i} className={`w-1 h-1 rounded-full ${i === 4 ? 'bg-indigo-500' : 'bg-gray-800'}`} />
+                                 ))}
+                             </div>
+                        </div>
+
+                        <div>
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_15px_#ef4444]" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/80">Active Analysis Engine</span>
+                                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">System State: Active</span>
                             </div>
-                            <h1 className="text-6xl md:text-8xl font-[1000] tracking-[-0.08em] uppercase leading-[0.85] text-white mb-10">
-                                STUDIO<br/>COMMAND<br/><span className="text-indigo-500 italic">CENTER.</span>
+                            <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase leading-none text-white mb-6">
+                                Studio<br/>Command<br/>Interface
                             </h1>
-                            <div className="flex flex-wrap gap-4">
-                                <button 
-                                  onClick={() => setIsDragging(true)}
-                                  className="bg-white text-black px-12 py-5 rounded-2xl font-[1000] uppercase text-xs tracking-widest flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-[0_20px_50px_rgba(255,255,255,0.2)]"
-                                >
-                                  <Upload size={20} strokeWidth={3} />
-                                  Initialize
-                                </button>
-                                <button 
-                                  onClick={() => setActiveTab('calendar')}
-                                  className="bg-white/10 backdrop-blur-3xl text-white border border-white/10 px-8 py-5 rounded-2xl font-[1000] uppercase text-xs tracking-widest flex items-center gap-3 hover:bg-white/20 transition-all"
-                                >
-                                  <BookOpen size={20} />
-                                  Vault
-                                </button>
-                            </div>
+                            <p className="text-gray-500 font-mono text-xs max-w-sm mb-8 leading-relaxed">
+                                &gt; INITIALIZING DECONSTRUCTION ENGINE_ <br/>
+                                &gt; WAITING FOR INPUT_
+                            </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-4">
+                            <button 
+                              onClick={() => setIsDragging(true)}
+                              className="bg-white text-black px-8 py-4 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-3 hover:bg-gray-200 transition-all border border-transparent"
+                            >
+                              <Upload size={16} strokeWidth={2} />
+                              Initialize Upload
+                            </button>
+                            <button 
+                              onClick={() => setActiveTab('calendar')}
+                              className="px-8 py-4 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-3 text-white border border-white/10 hover:bg-white/5 transition-all"
+                            >
+                              <BookOpen size={16} />
+                              Access Vault
+                            </button>
                         </div>
                     </div>
 
-                    {/* Stats Card 1: Analysis */}
-                    <div className="lg:col-span-2 bg-gradient-to-br from-[#111] to-black rounded-[2.5rem] p-10 border border-white/5 flex flex-col justify-between group hover:border-indigo-500/30 transition-all overflow-hidden relative shadow-2xl">
-                         <div className="absolute -right-4 -top-4 w-40 h-40 bg-indigo-600/10 rounded-full blur-[80px] group-hover:bg-indigo-600/20 transition-all" />
-                         <div className="relative z-10 flex justify-between items-start">
+                    {/* Stat Module 1: Deconstruction Index */}
+                    <div className="lg:col-span-2 bg-[#0a0a0a] rounded-lg p-8 border border-white/5 flex flex-col justify-between hover:border-indigo-500/50 transition-colors">
+                         <div className="flex justify-between items-start">
                             <div>
-                                <Zap size={28} className="text-indigo-500 mb-6" />
-                                <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">Total Deconstructions</h3>
-                                <div className="text-6xl font-[1000] text-white tabular-nums tracking-tighter">{storyboards.length}</div>
+                                <div className="flex items-center gap-2 mb-4 text-indigo-500">
+                                    <Zap size={18} />
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Analysis Index</span>
+                                </div>
+                                <div className="text-4xl font-mono font-bold text-white tabular-nums tracking-tighter">{storyboards.length.toString().padStart(3, '0')}</div>
                             </div>
-                            <div className="pt-2">
-                                <TrendingUp size={20} className="text-green-500" />
+                            <div className="h-full flex items-center">
+                                <TrendingUp size={16} className="text-gray-700" />
                             </div>
                          </div>
-                         <div className="relative z-10 mt-8 flex items-center gap-3 text-[11px] font-[1000] text-indigo-400 uppercase tracking-widest">
-                            <span>Last Logged: {storyboards[0] ? formatMovieName(storyboards[0].filename) : 'Awaiting Data'}</span>
-                            <ArrowRight size={14} className="group-hover:translate-x-2 transition-transform" />
+                         <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+                            <span>Latest Process: {storyboards[0] ? formatMovieName(storyboards[0].filename).substring(0, 15) + '...' : 'N/A'}</span>
+                            <span className="text-indigo-400">v2.1</span>
                          </div>
                     </div>
 
-                    {/* Stats Card 2: Ideas */}
-                    <div className="lg:col-span-1 bg-[#0c0c0c] rounded-[2.5rem] p-8 border border-white/5 flex flex-col justify-between group hover:border-pink-500/30 transition-all overflow-hidden relative shadow-2xl">
-                         <div className="absolute -right-8 -top-8 w-32 h-32 bg-pink-600/10 rounded-full blur-3xl group-hover:bg-pink-600/20 transition-all" />
+                    {/* Stat Module 2: Concept Cache */}
+                    <div className="lg:col-span-1 bg-[#0a0a0a] rounded-lg p-8 border border-white/5 flex flex-col justify-between hover:border-white/20 transition-colors">
                          <div>
-                            <Flame size={24} className="text-pink-500 mb-6" />
-                            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Concept Vault</h3>
-                            <div className="text-5xl font-[1000] text-white tabular-nums tracking-tighter">{storyIdeas.length}</div>
+                            <div className="flex items-center gap-2 mb-4 text-gray-400">
+                                <Flame size={18} />
+                                <span className="text-[9px] font-black uppercase tracking-widest">Concept Cache</span>
+                            </div>
+                            <div className="text-3xl font-mono font-bold text-white tabular-nums tracking-tighter">{storyIdeas.length.toString().padStart(2, '0')}</div>
                          </div>
-                         <div className="mt-8 flex items-center gap-2 text-[10px] font-[1000] text-pink-400 uppercase tracking-widest">
-                            <span>Capture Ideas</span>
-                            <Plus size={12} strokeWidth={4} />
+                         <div className="mt-4 flex items-center gap-2 text-[8px] font-bold text-gray-600 uppercase tracking-widest">
+                            <span>Storage Optimized</span>
                          </div>
                     </div>
 
-                    {/* Stats Card 3: Study Time */}
-                    <div className="lg:col-span-1 bg-gradient-to-tr from-[#0c0c0c] to-[#151515] rounded-[2.5rem] p-8 border border-white/5 flex flex-col justify-between group hover:border-emerald-500/30 transition-all overflow-hidden relative shadow-2xl">
-                         <div className="absolute -left-8 -bottom-8 w-32 h-32 bg-emerald-600/10 rounded-full blur-3xl group-hover:bg-emerald-600/20 transition-all" />
+                    {/* Stat Module 3: Temporal Log */}
+                    <div className="lg:col-span-1 bg-[#0a0a0a] rounded-lg p-8 border border-white/5 flex flex-col justify-between hover:border-white/20 transition-colors">
                          <div>
-                            <Activity size={24} className="text-emerald-500 mb-6" />
-                            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Study Hours</h3>
-                            <div className="text-5xl font-[1000] text-white tabular-nums tracking-tighter">{Math.round(activityLogs.reduce((acc, l) => acc + l.durationPlayed, 0) / 60)}<span className="text-xl text-gray-600 ml-1">m</span></div>
+                            <div className="flex items-center gap-2 mb-4 text-gray-400">
+                                <Activity size={18} />
+                                <span className="text-[9px] font-black uppercase tracking-widest">Temporal Log</span>
+                            </div>
+                            <div className="text-3xl font-mono font-bold text-white tabular-nums tracking-tighter">
+                                {Math.round(activityLogs.reduce((acc, l) => acc + l.durationPlayed, 0) / 60)}<span className="text-sm text-gray-600 ml-1">m</span>
+                            </div>
                          </div>
-                         <div className="mt-8 flex items-center gap-2 text-[10px] font-[1000] text-emerald-400 uppercase tracking-widest">
-                            <span>14-Day Streak</span>
-                            <TrendingUp size={12} strokeWidth={4} />
+                         <div className="mt-4 flex items-center gap-2 text-[8px] font-bold text-emerald-600 uppercase tracking-widest">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Tracking
                          </div>
                     </div>
                   </div>
 
-                  {/* STUDIO PULSE - PERFORMANCE CHART */}
-                  <div className="bg-gradient-to-br from-[#0c0c0c] to-black rounded-[4rem] p-12 border border-white/5 shadow-2xl relative overflow-hidden group">
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+                  {/* HIGH-FREQUENCY ACTIVITY MONITOR */}
+                  <div className="bg-[#0a0a0a] border border-white/5 rounded-lg p-10 shadow-sm relative overflow-hidden group">
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10 border-b border-white/5 pb-8">
                           <div>
-                              <div className="flex items-center gap-3 text-indigo-500 mb-3">
-                                  <TrendingUp size={28} />
-                                  <h2 className="text-3xl font-[1050] uppercase tracking-tighter italic text-white">Focus Intelligence</h2>
+                              <div className="flex items-center gap-3 mb-2">
+                                  <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                                  <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">Engagement Telemetry</h2>
                               </div>
-                              <p className="text-gray-500 text-sm font-[1000] uppercase tracking-[0.1em]">Deep temporal analysis of your cinematic study sessions.</p>
+                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-5">Temporal Analysis of Study Patterns</p>
                           </div>
                           <div className="flex gap-4">
-                               <div className="bg-indigo-500/10 border border-indigo-500/20 px-5 py-2 rounded-full">
-                                    <span className="text-[10px] font-[1000] uppercase tracking-widest text-indigo-400 italic">Engine Optimizing</span>
+                               <div className="flex items-center gap-3 px-4 py-2 border border-white/10 rounded-sm bg-white/[0.02]">
+                                    <Activity size={12} className="text-indigo-500" />
+                                    <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Sensor: Active</span>
                                </div>
                           </div>
                       </div>
                       
-                      {/* Better Continuous Activity Graph (SVG Area Chart) */}
-                      <div className="h-64 relative px-4 mt-8">
+                      {/* Technical Line Graph */}
+                      <div className="h-64 relative w-full bg-black/20 border-l border-b border-white/10">
+                          {/* Grid Lines */}
+                          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                              {[0, 25, 50, 75, 100].map(p => (
+                                  <div key={p} className="w-full h-px bg-white/[0.02]" />
+                              ))}
+                          </div>
+                          <div className="absolute inset-0 flex justify-between pointer-events-none">
+                              {[0, 20, 40, 60, 80, 100].map(p => (
+                                  <div key={p} className="h-full w-px bg-white/[0.02]" />
+                              ))}
+                          </div>
+
                           <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 100">
-                              <defs>
-                                  <linearGradient id="activityGradient" x1="0" y1="0" x2="0" y2="1">
-                                      <stop offset="0%" stopColor="#6366f1" stopOpacity="0.5" />
-                                      <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
-                                  </linearGradient>
-                                  <filter id="glow">
-                                      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                                      <feMerge>
-                                          <feMergeNode in="coloredBlur"/>
-                                          <feMergeNode in="SourceGraphic"/>
-                                      </feMerge>
-                                  </filter>
-                              </defs>
-                              
-                              {/* The Area Path */}
-                              <path 
-                                  d={`M 0 100 ${dailyActivity.map((day, i) => {
-                                      const x = (i / (dailyActivity.length - 1)) * 1000;
-                                      const maxMins = Math.max(...dailyActivity.map(d => d.minutes)) || 1;
-                                      const y = 100 - (day.minutes / maxMins) * 80 - 10;
-                                      return `L ${x} ${y}`;
-                                  }).join(' ')} L 1000 100 Z`}
-                                  fill="url(#activityGradient)"
-                                  className="transition-all duration-1000"
-                              />
-                              
-                              {/* The Smooth Spline Path */}
+                              {/* The Sharp Line Path */}
                               <path 
                                   d={`M 0 ${100 - (dailyActivity[0].minutes / (Math.max(...dailyActivity.map(d => d.minutes)) || 1)) * 80 - 10} ${dailyActivity.map((day, i) => {
                                       const x = (i / (dailyActivity.length - 1)) * 1000;
@@ -833,79 +828,78 @@ const App: React.FC = () => {
                                       return `L ${x} ${y}`;
                                   }).join(' ')}`}
                                   fill="none"
-                                  stroke="#818cf8"
-                                  strokeWidth="3"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  filter="url(#glow)"
-                                  className="transition-all duration-1000"
+                                  stroke="#6366f1"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="square"
+                                  strokeLinejoin="bevel"
+                                  className="transition-all duration-500"
                               />
 
-                              {/* Interactive Points */}
+                              {/* Technical Data Points */}
                               {dailyActivity.map((day, i) => {
                                   const x = (i / (dailyActivity.length - 1)) * 1000;
                                   const maxMins = Math.max(...dailyActivity.map(d => d.minutes)) || 1;
                                   const y = 100 - (day.minutes / maxMins) * 80 - 10;
                                   return (
-                                      <circle 
-                                          key={i} cx={x} cy={y} r="4" 
-                                          fill="#6366f1" stroke="white" strokeWidth="2"
-                                          className="cursor-pointer hover:r-6 transition-all"
-                                      >
-                                          <title>{day.date}: {day.minutes}m</title>
-                                      </circle>
+                                      <g key={i} className="group/point">
+                                          <circle 
+                                              cx={x} 
+                                              cy={y} 
+                                              r="2" 
+                                              fill="#0a0a0a" 
+                                              stroke="#6366f1" 
+                                              strokeWidth="1"
+                                              className="cursor-crosshair transition-all duration-300 group-hover/point:r-3 group-hover/point:fill-white"
+                                          />
+                                          {/* Tooltip */}
+                                          <foreignObject x={x - 40} y={y - 50} width="80" height="40" className="overflow-visible opacity-0 group-hover/point:opacity-100 transition-opacity pointer-events-none">
+                                              <div className="flex flex-col items-center bg-black border border-white/20 p-2 rounded-sm shadow-xl">
+                                                  <span className="text-[8px] text-gray-400 font-mono mb-1">{new Date(day.date).toLocaleDateString(undefined, {weekday: 'short'})}</span>
+                                                  <span className="text-[9px] text-white font-bold font-mono">{day.minutes}m</span>
+                                              </div>
+                                          </foreignObject>
+                                      </g>
                                   );
                               })}
                           </svg>
-
-                          {/* Date Labels Below SVG */}
-                          <div className="absolute top-[110%] left-0 w-full flex justify-between px-2">
-                              {dailyActivity.map((day, i) => (
-                                  <span key={i} className="text-[9px] font-black text-gray-600 uppercase tracking-widest hidden md:block">{day.date}</span>
-                              ))}
-                          </div>
                       </div>
                   </div>
 
+
                   {/* RECENT VAULT ACCESS */}
                   {storyboards.length > 0 && (
-                    <div className="space-y-10">
-                       <div className="flex justify-between items-center border-b border-white/5 pb-6">
-                            <h2 className="text-4xl font-[1050] uppercase tracking-[-0.05em] italic">Vault <span className="text-indigo-500">Highlights</span></h2>
-                            <button onClick={() => setActiveTab('movies')} className="text-xs font-black uppercase text-indigo-400 flex items-center gap-2 group hover:text-white transition-all">
-                                EXPLORE ARCHIVES
-                                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    <div className="space-y-6">
+                       <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">Archived Sequence Capture</h2>
+                            <button onClick={() => setActiveTab('movies')} className="text-[10px] font-bold uppercase text-indigo-400 flex items-center gap-2 group hover:text-white transition-colors">
+                                ACCESS FULL ARCHIVE
+                                <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
                             </button>
                        </div>
                        
-                       <div className="flex gap-10 overflow-x-auto pb-12 no-scrollbar -mx-4 px-4 md:-mx-12 md:px-12">
+                       <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
                             {storyboards.map((sb) => (
                                 <div 
                                   key={sb.filename}
                                   onClick={() => setPlayingStoryboard(sb)}
-                                  className="flex-shrink-0 w-80 md:w-[450px] group cursor-pointer"
+                                  className="flex-shrink-0 w-72 group cursor-pointer"
                                 >
-                                    <div className="relative aspect-video rounded-[2.5rem] overflow-hidden border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)] mb-8 transition-all hover:scale-[1.02] hover:shadow-indigo-500/10">
+                                    <div className="relative aspect-video rounded-sm overflow-hidden border border-white/10 mb-3 transition-colors group-hover:border-indigo-500/50 bg-black">
                                         <img 
                                           src={sb.notes.find(n => n.thumbnail)?.thumbnail || 'https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=400&auto=format&fit=crop'} 
-                                          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 brightness-90 group-hover:brightness-100"
+                                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity grayscale group-hover:grayscale-0"
                                           alt={sb.filename}
                                         />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                                        <div className="absolute top-6 left-6 flex gap-2">
-                                            <span className="bg-indigo-600/90 backdrop-blur-md text-[8px] font-black px-3 py-1.5 rounded-full tracking-widest uppercase shadow-xl font-mono">{sb.scenes?.length || 0} CUTS</span>
-                                            <span className="bg-white/10 backdrop-blur-md text-[8px] font-black px-3 py-1.5 rounded-full tracking-widest uppercase shadow-xl font-mono">{sb.notes?.length || 0} FRAMES</span>
-                                        </div>
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="w-16 h-16 bg-white/10 backdrop-blur-2xl rounded-full flex items-center justify-center text-white border border-white/20 scale-0 group-hover:scale-100 transition-all duration-500 shadow-2xl">
-                                                <Play size={24} fill="currentColor" className="ml-1" />
-                                            </div>
+                                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                                        <div className="absolute bottom-0 left-0 right-0 bg-black/80 border-t border-white/10 p-2 flex justify-between items-center">
+                                            <span className="text-[8px] font-mono font-bold text-gray-400">SEQ_ID_{sb.scenes?.length || '00'}</span>
+                                            <span className="text-[8px] font-mono font-bold text-indigo-400">{sb.notes?.length || 0} FRAMES</span>
                                         </div>
                                     </div>
-                                    <h3 className="text-2xl font-[1000] uppercase tracking-tighter truncate group-hover:text-indigo-400 transition-colors mb-2 italic">{formatMovieName(sb.filename)}</h3>
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Processed: {new Date(sb.lastModified).toLocaleDateString()}</p>
-                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f1]" />
+                                    <h3 className="text-xs font-black uppercase tracking-tight truncate text-gray-200 group-hover:text-indigo-400 transition-colors mb-1">{formatMovieName(sb.filename)}</h3>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                                        <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">LOGGED: {new Date(sb.lastModified).toLocaleDateString()}</p>
                                     </div>
                                 </div>
                             ))}
@@ -913,85 +907,84 @@ const App: React.FC = () => {
                     </div>
                   )}
 
-                  {/* GLOBAL DISCOVERY - MASONRY STYLE */}
-                  <div className="space-y-12 pb-24">
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/5 pb-8">
-                            <h2 className="text-4xl font-[1050] uppercase tracking-[-0.05em] italic">Library <span className="text-indigo-500 text-shadow-sm">Discovery</span></h2>
-                            <div className="w-full md:w-auto flex items-center gap-4 bg-[#0a0a0a] border border-white/10 px-6 py-4 rounded-[2rem] focus-within:border-indigo-500/50 transition-all shadow-inner">
-                                <Search size={18} className="text-gray-600" />
+                  {/* GLOBAL DISCOVERY - TECHNICAL GRID */}
+                  <div className="space-y-8 pb-24">
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-6">
+                            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">External Database Interface</h2>
+                            <div className="w-full md:w-auto flex items-center gap-3 bg-[#0a0a0a] border border-white/10 px-4 py-2.5 rounded-sm focus-within:border-indigo-500/50 transition-all">
+                                <Search size={14} className="text-gray-500" />
                                 <input 
                                     type="text" 
                                     value={discoverySearch}
                                     onChange={(e) => setDiscoverySearch(e.target.value)}
-                                    placeholder="Search 1M+ masterpieces..." 
-                                    className="bg-transparent border-none text-xs font-[1000] focus:outline-none w-full md:w-64 uppercase tracking-widest placeholder:text-gray-700"
+                                    placeholder="QUERY DATABASE..." 
+                                    className="bg-transparent border-none text-[10px] font-mono focus:outline-none w-full md:w-64 uppercase tracking-widest text-white placeholder:text-gray-700"
                                 />
                             </div>
                        </div>
 
-                       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+                       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
                             {apiMovies.map((movie, idx) => (
                                 <div 
                                     key={movie.id}
-                                    className={`relative rounded-[2rem] overflow-hidden group border border-white/10 cursor-pointer shadow-2xl transition-all hover:border-indigo-500/30 ${idx === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}
+                                    className={`relative rounded-sm overflow-hidden group border border-white/10 bg-[#0a0a0a] hover:border-white/30 transition-all cursor-pointer ${idx === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}
                                 >
-                                    <img 
-                                        src={movie.poster_path} 
-                                        className="w-full h-full object-cover transition-transform duration-[12s] group-hover:scale-110 brightness-90 group-hover:brightness-100"
-                                        alt={movie.title}
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-700 p-8 flex flex-col justify-end">
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <span className="text-yellow-500 font-black text-xs flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-lg backdrop-blur-md"><Star size={12} fill="currentColor" /> {movie.rating}</span>
-                                            <span className="bg-indigo-600 text-[10px] font-black px-2.5 py-1 rounded italic uppercase tracking-tighter">IMAX</span>
+                                    <div className="relative w-full h-full aspect-[2/3] overflow-hidden">
+                                        <img 
+                                            src={movie.poster_path} 
+                                            className="w-full h-full object-cover transition-all grayscale group-hover:grayscale-0 opacity-80 group-hover:opacity-100"
+                                            alt={movie.title}
+                                        />
+                                        <div className="absolute inset-0 ring-1 ring-inset ring-white/5 pointer-events-none" />
+                                        
+                                        {/* Technical Overlay */}
+                                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-[#0a0a0a]/90 backdrop-blur-sm border-t border-white/5 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-yellow-500 font-mono text-[9px] font-bold"><Star size={10} fill="currentColor" className="inline mr-1" />{movie.rating}</span>
+                                            </div>
+                                            <h4 className="text-[10px] font-black uppercase leading-tight tracking-wide text-white mb-3 line-clamp-2">{movie.title}</h4>
+                                            <button 
+                                              onClick={(e) => { e.stopPropagation(); addPlannerEntryFromList(movie, new Date().setHours(0,0,0,0)); }}
+                                              className="w-full py-2 bg-white text-black text-[9px] font-black uppercase rounded-sm hover:bg-indigo-500 hover:text-white transition-colors tracking-widest"
+                                            >
+                                                + Add to Schedule
+                                            </button>
                                         </div>
-                                        <h4 className="text-2xl font-[1000] uppercase leading-none tracking-tighter mb-6 line-clamp-2 italic">{movie.title}</h4>
-                                        <button 
-                                          onClick={(e) => { e.stopPropagation(); addPlannerEntryFromList(movie, new Date().setHours(0,0,0,0)); }}
-                                          className="w-full py-4 bg-white text-black text-[10px] font-black uppercase rounded-[1rem] hover:bg-indigo-500 hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-500 shadow-2xl"
-                                        >
-                                            Add to Plan
-                                        </button>
-                                    </div>
-                                    <div 
-                                      onClick={(e) => { e.stopPropagation(); addPlannerEntryFromList(movie, new Date().setHours(0,0,0,0)); }}
-                                      className="absolute top-6 right-6 flex items-center justify-center w-12 h-12 rounded-2xl bg-black/40 backdrop-blur-3xl border border-white/20 opacity-0 group-hover:opacity-100 transition-all duration-500 transform -rotate-12 group-hover:rotate-0"
-                                    >
-                                        <Plus size={20} className="text-white" strokeWidth={3} />
                                     </div>
                                 </div>
                             ))}
                        </div>
                   </div>
+
                 </div>
               )}
 
               {activeTab === 'calendar' && (
-                  <div className="w-full flex flex-col md:flex-row h-full md:h-[calc(100vh-100px)] pt-32 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
+                  <div className="w-full flex flex-col md:flex-row min-h-screen pt-32 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-20">
                       {/* Main Calendar Area */}
-                      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 pb-32 md:pb-20">
+                      <div className="flex-1 p-4 md:p-8">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                               <div>
-                                <h2 className="text-xl md:text-3xl font-black uppercase tracking-tight">Cine-Planner</h2>
-                                <p className="text-gray-500 font-bold text-[10px] md:text-sm mt-0.5 md:mt-1">Orchestrate your cinematic journey.</p>
+                                <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">Production Schedule</h2>
+                                <p className="text-gray-500 font-bold text-[10px] md:text-[10px] mt-1 uppercase tracking-widest">Temporal Asset Allocation</p>
                               </div>
-                              <div className="flex items-center gap-2 md:gap-4 bg-[#121212] border border-white/10 rounded-full px-3 py-1.5 md:px-4 md:py-2">
-                                  <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} className="hover:bg-white/10 p-1 rounded-full bg-transparent border-none text-white"><ChevronLeft size={16}/></button>
-                                  <span className="font-bold w-32 md:w-40 text-center uppercase tracking-widest text-[10px] md:text-xs">{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-                                  <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))} className="hover:bg-white/10 p-1 rounded-full bg-transparent border-none text-white"><ChevronRight size={16}/></button>
+                              <div className="flex items-center gap-px bg-[#121212] border border-white/10 rounded-sm">
+                                  <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} className="hover:bg-white/10 p-2 bg-transparent text-white border-r border-white/10"><ChevronLeft size={14}/></button>
+                                  <span className="font-mono font-bold w-32 md:w-40 text-center uppercase tracking-widest text-[10px] text-gray-300">{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                                  <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))} className="hover:bg-white/10 p-2 bg-transparent text-white border-l border-white/10"><ChevronRight size={14}/></button>
                               </div>
                           </div>
                           
                           {isPlannerLoading && (
-                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] bg-black/50 backdrop-blur-md p-6 rounded-2xl border border-white/10 flex flex-col items-center gap-4">
-                                  <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-                                  <p className="text-xs font-black text-white uppercase tracking-widest">Syncing with Supabase...</p>
+                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] bg-black/80 backdrop-blur-md p-6 border border-white/10 flex flex-col items-center gap-4">
+                                  <div className="w-8 h-8 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+                                  <p className="text-[10px] font-black text-white uppercase tracking-widest">Syncing Database...</p>
                               </div>
                           )}
                           
-                          <div className="grid grid-cols-7 gap-px bg-white/5 border border-white/5 rounded-2xl md:rounded-[2rem] overflow-hidden shadow-2xl backdrop-blur-xl">
+                          <div className="grid grid-cols-7 gap-px bg-white/5 border border-white/5 shadow-2xl backdrop-blur-xl">
                               {['S','M','T','W','T','F','S'].map((d, idx) => (
-                                  <div key={`${d}-${idx}`} className="bg-[#0a0a0a] py-3 text-[10px] md:text-xs font-black text-gray-600 text-center uppercase tracking-[0.2em]">{d}</div>
+                                  <div key={`${d}-${idx}`} className="bg-[#0a0a0a] py-3 text-[9px] font-black text-gray-600 text-center uppercase tracking-widest border-b border-white/5">{d}</div>
                               ))}
                               {calendarDays.map((day, i) => (
                                   <div 
@@ -1007,92 +1000,69 @@ const App: React.FC = () => {
                                             addPlannerEntryFromList(movie, day.timestamp);
                                         }
                                     }}
-                                    className={`bg-[#0e0e0e]/50 min-h-[80px] md:h-[160px] p-1 md:p-4 hover:bg-[#151515] transition-all relative group flex flex-col border-[0.5px] border-white/5 ${day && new Date().getDate() === day.day && new Date().getMonth() === currentDate.getMonth() ? 'bg-indigo-500/5' : ''}`}
+                                    className={`bg-[#0e0e0e]/50 min-h-[100px] md:h-[180px] p-2 hover:bg-[#151515] transition-all relative group flex flex-col border-[0.5px] border-white/5 ${day && new Date().getDate() === day.day && new Date().getMonth() === currentDate.getMonth() ? 'bg-indigo-500/5' : ''}`}
                                   >
                                       {day ? (
                                           <>
-                                              <div className="flex justify-between items-start mb-4">
-                                                  <div className={`text-[10px] md:text-sm font-black transition-colors ${new Date().getDate() === day.day && new Date().getMonth() === currentDate.getMonth() ? 'text-indigo-400 scale-125' : 'text-gray-500'}`}>{day.day}</div>
-                                                  <button onClick={() => setIsAddingPlan(day.timestamp)} className="md:opacity-0 group-hover:opacity-100 text-gray-500 hover:text-white transition-all bg-white/5 p-1 rounded-md hover:scale-110"><Plus size={14} /></button>
+                                              <div className="flex justify-between items-start mb-2">
+                                                  <div className={`text-[10px] font-mono font-bold transition-colors ${new Date().getDate() === day.day && new Date().getMonth() === currentDate.getMonth() ? 'text-indigo-400' : 'text-gray-600'}`}>{day.day}</div>
+                                                  <button onClick={() => setIsAddingPlan(day.timestamp)} className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-white transition-all bg-white/5 p-1 rounded-sm"><Plus size={12} /></button>
                                               </div>
-                                                <div className="flex-1 relative flex items-center justify-center min-h-[40px] md:min-h-[100px] mt-1 md:mt-2 group-hover:scale-105 transition-transform duration-500">
-                                                   {/* Stacked Posters */}
+                                                <div className="flex-1 relative mt-1">
+                                                   {/* Stacked Posters - Technical Style */}
                                                    {day.plans.length === 0 && day.movies.length === 0 && (
-                                                       <div className="absolute inset-x-4 inset-y-8 rounded-xl border border-dashed border-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                           <Film size={16} className="text-gray-700" />
+                                                       <div className="absolute inset-0 border border-dashed border-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                           <span className="text-[8px] uppercase tracking-widest text-gray-700">Empty Slot</span>
                                                        </div>
                                                    )}
                                                    
-                                                   {/* We combine plans and watched movies into one visual stack? 
-                                                       Let's focus on plans as posters, and movies as small badges or posters too. */}
                                                    {[...day.plans.map(p => ({...p, type: 'plan'})), ...day.movies.map(m => ({title: m, type: 'watched', posterPath: storyboards.find(s => s.filename === m)?.notes.find(n => n.thumbnail)?.thumbnail}))]
                                                     .slice(0, 4).reverse().map((item, idx, arr) => {
                                                        const reverseIdx = arr.length - 1 - idx;
                                                        return (
                                                            <div 
                                                                key={idx} 
-                                                               className="absolute transition-all duration-500 ease-out"
+                                                               className="absolute top-0 left-0 w-full transition-all duration-300"
                                                                style={{ 
                                                                    zIndex: idx, 
-                                                                   transform: `translateY(${reverseIdx * -12}px) scale(${1 - reverseIdx * 0.08})`,
-                                                                   opacity: 1 - (reverseIdx * 0.2),
-                                                                   filter: `blur(${reverseIdx * 0.5}px)`
+                                                                   transform: `translateY(${reverseIdx * 20}px)`,
                                                                }}
                                                            >
-                                                               <div className={`relative w-12 h-16 md:w-20 md:h-28 rounded-lg md:rounded-xl overflow-hidden shadow-2xl border ${item.type === 'watched' ? 'border-green-500/50 grayscale-[0.5]' : 'border-white/10'}`}>
-                                                                   {item.posterPath ? (
-                                                                       <img src={item.posterPath} alt="" className="w-full h-full object-cover" />
-                                                                   ) : (
-                                                                       <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center">
-                                                                           <Film size={20} className="text-gray-700" />
-                                                                       </div>
-                                                                   )}
-                                                                   {/* Small status indicator in the corner */}
-                                                                   <div className="absolute top-1 right-1">
-                                                                       {item.type === 'watched' ? (
-                                                                           <div className="p-0.5 bg-green-500 rounded-full shadow-lg">
-                                                                               <CheckCircle2 size={8} className="text-black" />
-                                                                           </div>
+                                                               <div className={`relative h-16 md:h-24 bg-[#111] border ${item.type === 'watched' ? 'border-emerald-500/30' : 'border-white/10'} shadow-sm flex gap-2 p-1`}>
+                                                                   <div className="w-10 h-full bg-black flex-shrink-0 relative overflow-hidden">
+                                                                       {item.posterPath ? (
+                                                                         <img src={item.posterPath} alt="" className="w-full h-full object-cover opacity-80" />
                                                                        ) : (
-                                                                           <div className="p-0.5 bg-indigo-500 rounded-full shadow-lg">
-                                                                               <Plus size={8} className="text-white" />
-                                                                           </div>
+                                                                         <div className="w-full h-full flex items-center justify-center bg-white/5"><Film size={12} className="text-gray-700"/></div>
                                                                        )}
                                                                    </div>
-                                                                   
-                                                                   {/* Overlay on hover of the WHOLE cell */}
-                                                                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center">
-                                                                        <span className="text-[8px] font-black uppercase leading-tight line-clamp-2">{item.title}</span>
-                                                                        {item.type === 'plan' && (
-                                                                            <button 
-                                                                                onClick={(e) => { e.stopPropagation(); deletePlannerEntry((item as any).id); setPlannerEntries(prev => prev.filter(p => p.id !== (item as any).id)); }}
-                                                                                className="mt-2 p-1 text-red-400 hover:text-red-300 transition-colors"
-                                                                            >
-                                                                                <Trash2 size={10} />
-                                                                            </button>
-                                                                        )}
+                                                                   <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                                        <span className="text-[8px] font-black uppercase text-gray-300 truncate leading-tight">{item.title}</span>
+                                                                        <span className="text-[7px] font-mono text-gray-600 uppercase tracking-wider">{item.type}</span>
                                                                    </div>
+                                                                   {item.type === 'plan' && (
+                                                                        <button 
+                                                                            onClick={(e) => { e.stopPropagation(); deletePlannerEntry((item as any).id); setPlannerEntries(prev => prev.filter(p => p.id !== (item as any).id)); }}
+                                                                            className="absolute top-1 right-1 text-red-500 opacity-0 group-hover:opacity-100 p-1"
+                                                                        >
+                                                                            <Trash2 size={8} />
+                                                                        </button>
+                                                                   )}
                                                                </div>
                                                            </div>
                                                        );
                                                    })}
-                                                   
-                                                   {day.plans.length + day.movies.length > 4 && (
-                                                       <div className="absolute -bottom-2 -right-2 bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shadow-xl z-[50] border border-white/20">
-                                                           +{day.plans.length + day.movies.length - 4}
-                                                       </div>
-                                                   )}
-                                               </div>
+                                                </div>
                                               {isAddingPlan === day.timestamp && (
-                                                  <div className="absolute inset-x-2 top-2 bottom-2 bg-[#1a1a1a] z-50 p-4 flex flex-col justify-center animate-in slide-in-from-top-4 duration-300 rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
-                                                      <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4">New Entry</h4>
-                                                      <input autoFocus type="text" placeholder="Movie title..." className="bg-black border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white mb-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all font-bold" value={planTitle} onChange={(e) => setPlanTitle(e.target.value)} />
-                                                      <select className="bg-black border border-white/10 rounded-xl px-4 py-2 text-xs text-white mb-4 focus:outline-none appearance-none cursor-pointer font-bold" value={planPlatform} onChange={(e) => setPlanPlatform(e.target.value)}>
-                                                          <option value="Theater">Theater</option><option value="Netflix">Netflix</option><option value="Streaming">Streaming</option><option value="BluRay">BluRay</option>
+                                                  <div className="absolute inset-x-0 -top-20 z-50 bg-[#0a0a0a] p-4 flex flex-col justify-center border border-white/20 shadow-2xl">
+                                                      <h4 className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-2">Schedule Asset</h4>
+                                                      <input autoFocus type="text" placeholder="ASSET TITLE..." className="bg-black/50 border border-white/10 p-2 text-[10px] text-white mb-2 focus:outline-none focus:border-indigo-500 font-mono" value={planTitle} onChange={(e) => setPlanTitle(e.target.value)} />
+                                                      <select className="bg-black/50 border border-white/10 p-2 text-[10px] text-white mb-2 focus:outline-none appearance-none cursor-pointer font-mono" value={planPlatform} onChange={(e) => setPlanPlatform(e.target.value)}>
+                                                          <option value="Theater">THEATER_RELEASE</option><option value="Netflix">NETFLIX_STREAM</option><option value="Streaming">VOD_SERVICE</option><option value="BluRay">PHYSICAL_MEDIA</option>
                                                       </select>
                                                       <div className="flex gap-2">
-                                                          <button onClick={() => addPlannerEntry(day.timestamp)} className="flex-1 bg-white text-black hover:bg-gray-200 text-[10px] font-black uppercase py-2.5 rounded-xl transition-all active:scale-95 tracking-widest">Add</button>
-                                                          <button onClick={() => setIsAddingPlan(null)} className="flex-1 bg-white/5 hover:bg-white/10 text-gray-500 text-[10px] font-black uppercase py-2.5 rounded-xl transition-all tracking-widest">Exit</button>
+                                                          <button onClick={() => addPlannerEntry(day.timestamp)} className="flex-1 bg-white text-black hover:bg-gray-200 text-[9px] font-black uppercase py-2 transition-colors tracking-widest">Confirm</button>
+                                                          <button onClick={() => setIsAddingPlan(null)} className="flex-1 bg-white/5 hover:bg-white/10 text-gray-500 text-[9px] font-black uppercase py-2 transition-colors tracking-widest">Cancel</button>
                                                       </div>
                                                   </div>
                                               )}
@@ -1332,32 +1302,25 @@ const App: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
-                                    <div className="flex items-center justify-between mb-8">
-                                        <div className="flex items-center gap-3 font-black text-gray-400 uppercase text-xs tracking-widest">
-                                            <TrendingUp size={16} className="text-indigo-500" /> 
-                                            Cinematic Pulse (Continuous)
+                                <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-8 shadow-sm relative overflow-hidden group">
+                                    <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                                            <h3 className="text-sm font-black text-white uppercase tracking-[0.2em]">Intensity Temporal Distribution</h3>
                                         </div>
-                                        <div className="text-[10px] font-black text-gray-600 uppercase tracking-widest">X-Axis: Timeline | Y-Axis: Intensity</div>
+                                        <div className="text-[9px] font-bold text-gray-600 uppercase tracking-widest flex items-center gap-4">
+                                            <span>X: Timeline (seconds)</span>
+                                            <span className="w-px h-2 bg-white/10" />
+                                            <span>Y: Rating Matrix</span>
+                                        </div>
                                     </div>
 
-                                    <div className="h-64 w-full bg-black/40 rounded-2xl border border-white/5 relative overflow-visible mt-4">
-                                        {/* Premium Continuous Waveform SVG */}
+                                    <div className="h-64 w-full bg-black/40 rounded border border-white/5 relative overflow-visible mt-4">
+                                        {/* Professional Technical Waveform SVG */}
                                         <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 100">
-                                            <defs>
-                                                <linearGradient id="insightsIntensityGrad" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor="#6366f1" stopOpacity="0.5" />
-                                                    <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
-                                                </linearGradient>
-                                                <filter id="insightsGlow">
-                                                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                                                    <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                                                </filter>
-                                            </defs>
-
                                             {selectedMovieData.segments && selectedMovieData.segments.length > 0 ? (
                                                 <>
-                                                    {/* Background Area Fill */}
+                                                    {/* Clean Line Path */}
                                                     <path 
                                                         d={`M 0 100 ${selectedMovieData.segments
                                                             .sort((a,b) => a.startTime - b.startTime)
@@ -1380,64 +1343,34 @@ const App: React.FC = () => {
                                                                 const cp2x = prevEndX + (x - prevEndX) / 2;
                                                                 
                                                                 return `C ${cp1x} ${prevY}, ${cp2x} ${y}, ${x} ${y} L ${endX} ${y}`;
-                                                            }).join(' ')} L 1000 100 Z`}
-                                                        fill="url(#insightsIntensityGrad)"
-                                                        className="transition-all duration-1000"
-                                                    />
-                                                    {/* The Main Spline Path */}
-                                                    <path 
-                                                        d={`M 0 100 ${selectedMovieData.segments
-                                                            .sort((a,b) => a.startTime - b.startTime)
-                                                            .reduce((acc: any[], seg: any) => {
-                                                                const lastEnd = acc.length > 0 ? acc[acc.length - 1].endTime : -1;
-                                                                if (seg.startTime >= lastEnd) acc.push(seg);
-                                                                return acc;
-                                                            }, [])
-                                                            .map((seg: any, i: number, arr: any[]) => {
-                                                                const x = (seg.startTime / (selectedMovieData.duration || 1)) * 1000;
-                                                                const y = 100 - (seg.rating || 10);
-                                                                const endX = (seg.endTime / (selectedMovieData.duration || 1)) * 1000;
-                                                                
-                                                                if (i === 0) return `L 0 ${y} L ${x} ${y} L ${endX} ${y}`;
-                                                                
-                                                                const prev = arr[i-1];
-                                                                const prevEndX = (prev.endTime / (selectedMovieData.duration || 1)) * 1000;
-                                                                const prevY = 100 - (prev.rating || 10);
-                                                                const cp1x = prevEndX + (x - prevEndX) / 2;
-                                                                const cp2x = prevEndX + (x - prevEndX) / 2;
-                                                                
-                                                                return `C ${cp1x} ${prevY}, ${cp2x} ${y}, ${x} ${y} L ${endX} ${y}`;
-                                                            }).join(' ')} L 1000 100 Z`}
+                                                            }).join(' ')} L 1000 100`}
                                                         fill="none"
-                                                        stroke="#818cf8"
-                                                        strokeWidth="2.5"
+                                                        stroke="#4f46e5"
+                                                        strokeWidth="1.5"
                                                         strokeLinecap="round"
-                                                        filter="url(#insightsGlow)"
-                                                        className="transition-all duration-1000"
+                                                        className="transition-all duration-300"
                                                     />
                                                 </>
                                             ) : null}
                                         </svg>
 
-                                        {/* Overlay Interactive Regions (for tooltips) */}
+                                        {/* Overlay Technical Regions */}
                                         <div className="absolute inset-0 flex">
                                             {selectedMovieData.segments?.map(seg => (
                                                 <div 
                                                     key={seg.id}
-                                                    className="h-full hover:bg-white/5 transition-all group flex items-end justify-center cursor-crosshair z-10"
+                                                    className="h-full hover:bg-white/[0.02] transition-colors group flex items-end justify-center cursor-default z-10"
                                                     style={{ width: `${((seg.endTime - seg.startTime) / (selectedMovieData.duration || 1)) * 100}%` }}
                                                 >
-                                                    {/* Tooltip on Hover */}
-                                                    <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-4 left-1/2 -translate-x-1/2 bg-[#0a0a0a] border border-white/10 p-4 rounded-2xl text-[10px] whitespace-nowrap z-50 shadow-[0_20px_50px_rgba(0,0,0,0.8)] pointer-events-none scale-90 group-hover:scale-100 transition-all">
-                                                        <div className="flex items-center gap-2 mb-2">
-                                                            <div className={`w-2 h-2 rounded-full ${getSceneColor(seg.type)}`} />
-                                                            <span className="font-black text-indigo-400 uppercase tracking-widest">{seg.type}</span>
+                                                    {/* Professional Label Overlay on Hover */}
+                                                    <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-4 left-1/2 -translate-x-1/2 bg-white text-black px-4 py-2 rounded-sm text-[9px] font-black whitespace-nowrap z-50 pointer-events-none transition-all shadow-xl uppercase">
+                                                        <div className="flex items-center gap-3 mb-1">
+                                                            <span>Type: {seg.type}</span>
+                                                            <span className="text-gray-400">|</span>
+                                                            <span className="text-indigo-600">Intensity: {seg.rating}</span>
                                                         </div>
-                                                        <div className="text-3xl font-[1000] text-white tabular-nums mb-1">{seg.rating}<span className="text-xs text-gray-600 ml-1">INTENSITY</span></div>
-                                                        <div className="flex items-center gap-4 text-gray-500 font-bold">
-                                                            <span>{Math.floor(seg.startTime / 60)}:{(seg.startTime % 60).toString().padStart(2, '0')}</span>
-                                                            <ArrowRight size={10} />
-                                                            <span>{Math.floor(seg.endTime / 60)}:{(seg.endTime % 60).toString().padStart(2, '0')}</span>
+                                                        <div className="text-[8px] font-bold text-gray-500">
+                                                            Range: {Math.floor(seg.startTime / 60)}:{(seg.startTime % 60).toString().padStart(2, '0')} - {Math.floor(seg.endTime / 60)}:{(seg.endTime % 60).toString().padStart(2, '0')}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1445,35 +1378,35 @@ const App: React.FC = () => {
                                         </div>
 
                                         {(!selectedMovieData.segments || selectedMovieData.segments.length === 0) && (
-                                            <div className="absolute inset-0 flex items-center justify-center text-[10px] text-gray-700 font-black uppercase tracking-widest">Initialization Required: No Intensity Data</div>
+                                            <div className="absolute inset-0 flex items-center justify-center text-[9px] text-gray-700 font-black uppercase tracking-[0.3em] bg-black/20">Segment Data Undefined</div>
                                         )}
                                     </div>
                                 </div>
-                                
-                                <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 lg:p-8 shadow-2xl relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 w-80 h-80 bg-pink-500/5 blur-[120px] rounded-full pointer-events-none" />
-                                    <div className="flex items-center justify-between mb-10">
-                                        <div className="flex items-center gap-4">
-                                            <div className="bg-pink-500/20 p-2.5 rounded-xl text-pink-500">
-                                                <Disc size={20} className="animate-pulse" />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-black text-white uppercase tracking-tight text-lg">Cinematic Genome</h3>
-                                                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">3D Atomic Structure Analyis</p>
-                                            </div>
-                                        </div>
-                                        <div className="bg-white/5 border border-white/10 text-gray-500 text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.2em]">
-                                            Status: <span className="text-pink-500">Encoded</span>
-                                        </div>
-                                    </div>
 
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                                        <div className="space-y-10">
-                                            <div>
-                                                <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
-                                                    <Hash size={14} className="text-indigo-400" /> Genomic Trace Sequence
+                                
+                                {/* MIT-Style Technical Analysis Section */}
+                                <div className="grid grid-cols-1 gap-6">
+                                    {/* Cinematic Genome: Professional Schematic */}
+                                    <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-8 shadow-sm relative overflow-hidden">
+                                        <div className="flex items-center justify-between mb-12 border-b border-white/5 pb-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                                                <div>
+                                                    <h3 className="text-sm font-black text-white uppercase tracking-[0.2em]">Structural Composition Analysis</h3>
+                                                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Nucelotide Sequence Mapping v1.0.4</p>
                                                 </div>
-                                                <div className="bg-black/40 p-6 rounded-[2rem] border border-white/5 font-mono text-2xl font-black flex flex-wrap gap-x-4 gap-y-3 max-h-56 overflow-y-auto custom-scrollbar relative">
+                                            </div>
+                                            <div className="flex items-center gap-6">
+                                                <div className="text-right">
+                                                    <div className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Processing Mode</div>
+                                                    <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none">High Fidelity</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                                            <div className="lg:col-span-12">
+                                                <div className="bg-black/20 p-8 rounded-lg border border-white/5 font-mono text-lg font-bold flex flex-wrap gap-x-4 gap-y-3 relative group">
                                                     {(selectedMovieData.segments || [])
                                                         .sort((a,b) => a.startTime - b.startTime)
                                                         .map((seg, i) => {
@@ -1482,150 +1415,122 @@ const App: React.FC = () => {
                                                                 if (t === 'action') return 'A';
                                                                 if (t === 'comedy') return 'C';
                                                                 if (t === 'suspense') return 'S';
-                                                                if (t === 'drama') return 'G'; // Guanine for Drama
+                                                                if (t === 'drama') return 'G';
                                                                 if (t === 'thriller') return 'T';
                                                                 if (t === 'dialogue') return 'V';
                                                                 if (t === 'romance') return 'R';
                                                                 return 'X';
                                                             })();
                                                             return (
-                                                                <span key={i} className="group relative cursor-help">
-                                                                    <span className={
-                                                                        seg.type === 'action' ? 'text-red-500' :
-                                                                        seg.type === 'comedy' ? 'text-yellow-400' :
-                                                                        seg.type === 'suspense' ? 'text-indigo-400' :
-                                                                        seg.type === 'drama' ? 'text-blue-500' :
-                                                                        'text-gray-600'
-                                                                    }>{nuc}</span>
-                                                                    <div className="opacity-0 group-hover:opacity-100 absolute -top-10 left-1/2 -translate-x-1/2 bg-black border border-white/10 p-2 rounded-xl text-[8px] whitespace-nowrap z-50 transition-all pointer-events-none uppercase shadow-2xl skew-x-2">
-                                                                        <div className="text-white/50 mb-1">{seg.type}</div>
-                                                                        <div className="text-indigo-400 font-mono">{Math.floor(seg.startTime/60)}:{(Math.floor(seg.startTime%60)).toString().padStart(2,'0')}</div>
+                                                                <span key={i} className="cursor-default relative group/nuc">
+                                                                    <span className="text-gray-500 hover:text-white transition-colors duration-300">{nuc}</span>
+                                                                    <div className="opacity-0 group-hover/nuc:opacity-100 absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-white text-black px-2 py-1 rounded-sm text-[8px] font-black whitespace-nowrap z-50 transition-all pointer-events-none uppercase">
+                                                                        {seg.type} | {Math.floor(seg.startTime/60)}:{(Math.floor(seg.startTime%60)).toString().padStart(2,'0')}
                                                                     </div>
                                                                 </span>
                                                             );
                                                         })}
-                                                    <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
                                                 </div>
                                             </div>
                                             
-                                            <div className="bg-white/[0.02] p-6 rounded-2xl border border-white/5 relative overflow-hidden">
-                                                <div className="absolute top-0 left-0 w-1 h-full bg-pink-500/20" />
-                                                <div className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4">Nucleotide Legend</div>
-                                                <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-[10px] font-bold text-gray-500">
-                                                    <div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef444466]" /> Adenine (Action)</div>
-                                                    <div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_#facc1566]" /> Cytosine (Comedy)</div>
-                                                    <div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f166]" /> Sugar (Suspense)</div>
-                                                    <div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f666]" /> Guanine (Drama)</div>
+                                            <div className="lg:col-span-8 flex flex-col justify-center">
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6">
+                                                    {[
+                                                        { label: 'Adenine', value: 'Action', color: 'bg-gray-400' },
+                                                        { label: 'Cytosine', value: 'Comedy', color: 'bg-gray-400' },
+                                                        { label: 'Sugar', value: 'Suspense', color: 'bg-indigo-500' },
+                                                        { label: 'Guanine', value: 'Drama', color: 'bg-gray-400' }
+                                                    ].map(item => (
+                                                        <div key={item.label} className="flex flex-col gap-1 border-l border-white/10 pl-4">
+                                                            <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">{item.label}</span>
+                                                            <span className="text-[11px] font-black text-white uppercase tracking-tight">{item.value}</span>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             </div>
+
+                                            <div className="lg:col-span-4 h-64 bg-black/40 rounded-lg border border-white/5 relative flex items-center justify-center overflow-hidden [perspective:2000px]">
+                                                {/* DNA Helix Container: More technical, slower, no glow */}
+                                                <div className="w-32 h-full relative [transform-style:preserve-3d] animate-dna-slow-spin">
+                                                    {Array.from({ length: 20 }).map((_, i) => {
+                                                        const rotation = i * 28;
+                                                        const yOffset = (i * 12) - 120;
+                                                        const progress = i / 19;
+                                                        const time = progress * (selectedMovieData.duration || 1);
+                                                        const seg = selectedMovieData.segments?.find(s => time >= s.startTime && time <= s.endTime);
+                                                        const isAccent = seg?.type === 'suspense' || seg?.type === 'action';
+                                                        const color = isAccent ? '#6366f1' : '#1e1e1e';
+
+                                                        return (
+                                                            <div 
+                                                                key={i} 
+                                                                className="absolute top-1/2 left-1/2 [transform-style:preserve-3d]"
+                                                                style={{ transform: `translate3d(-50%, -50%, 0) translateY(${yOffset}px) rotateY(${rotation}deg)` }}
+                                                            >
+                                                                <div className="w-16 h-[0.5px] bg-white/5 absolute -left-8 top-0" />
+                                                                <div className="w-1.5 h-1.5 rounded-full absolute -left-9 -top-0.5" style={{ backgroundColor: color }} />
+                                                                <div className="w-1.5 h-1.5 rounded-full absolute left-7 -top-0.5 bg-gray-800" />
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                                <style dangerouslySetInnerHTML={{ __html: `
+                                                    @keyframes dnaSlowRotation {
+                                                        from { transform: rotateY(0deg); }
+                                                        to { transform: rotateY(360deg); }
+                                                    }
+                                                    .animate-dna-slow-spin {
+                                                        animation: dnaSlowRotation 30s linear infinite;
+                                                    }
+                                                ` }} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Secondary Metrics Row */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-8">
+                                            <div className="flex items-center gap-3 mb-8 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                                                <Activity size={12} strokeWidth={3}/> Engagement Persistence
+                                            </div>
+                                            {selectedMovieData.heatmap && (
+                                                <div className="h-24 w-full bg-black/40 rounded border border-white/5 overflow-hidden">
+                                                    <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 100">
+                                                        <path 
+                                                            d={`M 0 100 ${selectedMovieData.heatmap.map((val, i) => {
+                                                                const x = (i / (selectedMovieData.heatmap!.length - 1)) * 1000;
+                                                                const y = 100 - (val * 8);
+                                                                return `L ${x} ${y}`;
+                                                            }).join(' ')} L 1000 100`}
+                                                            fill="none"
+                                                            stroke="#4f46e5"
+                                                            strokeWidth="1"
+                                                        />
+                                                    </svg>
+                                                </div>
+                                            )}
                                         </div>
 
-                                        <div className="h-[480px] bg-black/40 rounded-[2.5rem] border border-white/5 p-12 relative flex items-center justify-center overflow-hidden [perspective:1200px]">
-                                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(236,72,153,0.05)_0%,transparent_70%)]" />
-                                            {/* DNA Helix Container */}
-                                            <div className="w-40 h-full relative [transform-style:preserve-3d] animate-dna-spin">
-                                                {Array.from({ length: 30 }).map((_, i) => {
-                                                    const rotation = i * 24;
-                                                    const yOffset = (i * 14) - 210;
-                                                    const progress = i / 29;
-                                                    const time = progress * (selectedMovieData.duration || 1);
-                                                    const seg = selectedMovieData.segments?.find(s => time >= s.startTime && time <= s.endTime);
-                                                    const color = seg ? (
-                                                        seg.type === 'action' ? '#ef4444' :
-                                                        seg.type === 'comedy' ? '#facc15' :
-                                                        seg.type === 'suspense' ? '#6366f1' :
-                                                        seg.type === 'thriller' ? '#a855f7' :
-                                                        seg.type === 'drama' ? '#3b82f6' : '#4b5563'
-                                                    ) : '#1f2937';
-
+                                        <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-8">
+                                            <div className="flex items-center gap-3 mb-8 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                                                <MonitorPlay size={12} strokeWidth={3}/> Event Distribution
+                                            </div>
+                                            <div className="grid grid-cols-4 gap-2">
+                                                {['play', 'pause', 'seek', 'exit'].map(type => {
+                                                    const count = activityLogs
+                                                       .filter(l => l.filename === selectedMovieData.filename)
+                                                       .reduce((acc, l) => acc + (l.interactions?.filter(i => i.type === type).length || 0), 0);
                                                     return (
-                                                        <div 
-                                                            key={i} 
-                                                            className="absolute top-1/2 left-1/2 [transform-style:preserve-3d]"
-                                                            style={{ 
-                                                                transform: `translate3d(-50%, -50%, 0) translateY(${yOffset}px) rotateY(${rotation}deg)` 
-                                                            }}
-                                                        >
-                                                            {/* Connector (Rung) */}
-                                                            <div className="w-32 h-[1.5px] bg-white/5 absolute -left-16 top-0" />
-                                                            {/* Nucleotides (Spheres) */}
-                                                            <div 
-                                                                className="w-4 h-4 rounded-full absolute -left-18 -top-2" 
-                                                                style={{ backgroundColor: color, boxShadow: `0 0 15px ${color}88` }}
-                                                            />
-                                                            <div 
-                                                                className="w-4 h-4 rounded-full absolute left-14 -top-2 bg-pink-500/80 shadow-[0_0_15px_#ec489988]"
-                                                            />
+                                                        <div key={type} className="flex flex-col border border-white/5 p-3 rounded bg-black/20">
+                                                            <span className="text-[8px] font-black text-gray-600 uppercase mb-1">{type}</span>
+                                                            <span className="text-xl font-bold text-white tabular-nums">{count}</span>
                                                         </div>
                                                     );
                                                 })}
                                             </div>
-                                            
-                                            <style dangerouslySetInnerHTML={{ __html: `
-                                                @keyframes dnaRotation {
-                                                    from { transform: rotateY(0deg); }
-                                                    to { transform: rotateY(360deg); }
-                                                }
-                                                .animate-dna-spin {
-                                                    animation: dnaRotation 12s linear infinite;
-                                                }
-                                            ` }} />
-
-                                            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50">
-                                                <div className="w-px h-12 bg-gradient-to-t from-transparent via-pink-500/40 to-transparent" />
-                                                <span className="text-[9px] font-black uppercase tracking-[0.5em] text-pink-500/60">Cinematic Nucleus</span>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl">
-                                    <div className="flex items-center gap-3 mb-6 font-black text-gray-400 uppercase text-xs tracking-widest"><MonitorPlay size={16}/> Interaction Behavior</div>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {['play', 'pause', 'seek', 'exit'].map(type => {
-                                            const count = activityLogs
-                                               .filter(l => l.filename === selectedMovieData.filename)
-                                               .reduce((acc, l) => acc + (l.interactions?.filter(i => i.type === type).length || 0), 0);
-                                            return (
-                                                <div key={type} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col gap-1 items-center justify-center">
-                                                    <div className="text-[10px] text-gray-500 font-black uppercase tracking-wider">{type} Events</div>
-                                                    <div className="text-3xl font-[1000] text-white italic">{count}</div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                                    {selectedMovieData.heatmap && (
-                                        <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
-                                            <div className="flex items-center gap-3 mb-8 font-black text-gray-400 uppercase text-xs tracking-widest"><Activity size={16} className="text-emerald-500" /> Attention Heatmap (Engagement)</div>
-                                            <div className="h-32 w-full bg-black/40 rounded-xl relative overflow-visible">
-                                                <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 100">
-                                                    <defs>
-                                                        <linearGradient id="attentionGrad" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
-                                                            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <path 
-                                                        d={`M 0 100 ${selectedMovieData.heatmap.map((val, i) => {
-                                                            const x = (i / (selectedMovieData.heatmap!.length - 1)) * 1000;
-                                                            const y = 100 - (val * 8); // Scale for better visibility
-                                                            return `L ${x} ${Math.min(95, y)}`;
-                                                        }).join(' ')} L 1000 100 Z`}
-                                                        fill="url(#attentionGrad)"
-                                                        stroke="#10b981"
-                                                        strokeWidth="1.5"
-                                                        className="transition-all duration-700"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <div className="flex justify-between text-[9px] text-gray-600 mt-6 font-black tracking-[0.2em] uppercase px-2">
-                                                <span>Opening Act</span>
-                                                <span className="text-emerald-500/50">Engagement Persistence</span>
-                                                <span>Closing Credits</span>
-                                            </div>
-                                        </div>
-                                    )}
                             </div>
                         </div>
                     ) : (
@@ -1640,48 +1545,45 @@ const App: React.FC = () => {
 
 
               {activeTab === 'ideas' && (
-                  <div className="w-full px-8 pt-32 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-20">
-                      <div className="flex items-center justify-between mb-8">
+                  <div className="w-full px-8 pt-24 pb-20 max-w-7xl mx-auto">
+                      <div className="flex items-center justify-between mb-12 border-b border-white/5 pb-8">
                           <div>
-                            <h2 className="text-3xl font-black uppercase tracking-tight">Story Vault</h2>
-                            <p className="text-gray-500 font-bold text-sm mt-1">Capture your next cinematic masterpiece.</p>
+                            <h2 className="text-sm font-black text-white uppercase tracking-[0.3em]">Story Repository</h2>
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Version 2.4.0-Alpha | Encrypted Local Cache</p>
                           </div>
                           <button 
                             onClick={() => setIsAddingIdea(true)}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-full font-black uppercase text-xs tracking-[0.2em] transition-all flex items-center gap-3 shadow-lg shadow-indigo-500/20 active:scale-95"
+                            className="bg-white text-black hover:bg-gray-200 px-6 py-2.5 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] transition-all flex items-center gap-3 active:scale-95"
                           >
-                              <Lightbulb size={16} /> Save New Idea
+                               <Plus size={14} strokeWidth={3} /> Register New Conceptual Asset
                           </button>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                           {storyIdeas.map(idea => (
-                              <div key={idea.id} className="bg-[#121212] border border-white/10 rounded-2xl p-6 shadow-xl hover:border-indigo-500/30 transition-all group">
-                                  <div className="flex justify-between items-start mb-4">
-                                      <div className="bg-indigo-500/10 p-2.5 rounded-xl text-indigo-400">
-                                          <Lightbulb size={20} />
+                              <div key={idea.id} className="bg-[#0a0a0a] border border-white/5 rounded-lg p-8 hover:border-white/10 transition-all group relative overflow-hidden">
+                                  <div className="flex justify-between items-center mb-6">
+                                      <div className="flex items-center gap-3">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                                          <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">{idea.id.split('-')[0]}</span>
                                       </div>
                                       <button 
                                         onClick={() => handleDeleteIdea(idea.id)}
-                                        className="text-gray-600 hover:text-red-500 transition-colors"
+                                        className="text-gray-700 hover:text-white transition-colors p-1"
                                       >
-                                          <Trash2 size={16} />
+                                          <X size={14} />
                                       </button>
                                   </div>
-                                  <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2 group-hover:text-indigo-400 transition-colors">{idea.title}</h3>
-                                  <p className="text-gray-400 text-sm font-medium leading-relaxed mb-6 line-clamp-4">
+                                  <h3 className="text-sm font-black text-white uppercase tracking-tight mb-4 group-hover:text-indigo-400 transition-colors duration-500">{idea.title}</h3>
+                                  <p className="text-gray-500 text-[11px] font-bold leading-relaxed mb-8 line-clamp-3">
                                       {idea.description}
                                   </p>
-                                  <div className="flex flex-wrap gap-2">
+                                  <div className="flex flex-wrap gap-x-3 gap-y-2">
                                       {idea.tags.map(tag => (
-                                          <span key={tag} className="flex items-center gap-1 bg-white/5 border border-white/5 px-3 py-1 rounded-full text-[9px] font-black uppercase text-gray-500 tracking-wider">
-                                              <Hash size={10} /> {tag}
+                                          <span key={tag} className="text-[8px] font-black uppercase text-gray-600 tracking-wider flex items-center gap-1.5">
+                                              <span className="w-1 h-1 bg-white/10 rounded-full" /> {tag}
                                           </span>
                                       ))}
-                                  </div>
-                                  <div className="mt-8 pt-4 border-t border-white/5 flex justify-between items-center text-[9px] font-black text-gray-700 uppercase tracking-widest">
-                                      <span>ID: {idea.id.slice(-6)}</span>
-                                      <span>{new Date(idea.createdAt).toLocaleDateString()}</span>
                                   </div>
                               </div>
                           ))}
