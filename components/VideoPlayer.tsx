@@ -1480,7 +1480,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
        </div>
 
        {/* Sidebar */}
-       <div className={`absolute top-0 right-0 h-full bg-[#0a0a0a]/90 backdrop-blur-2xl border-l border-white/10 w-80 transition-transform duration-300 z-[60] ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'} ${state.isFullscreen ? 'shadow-2xl' : ''}`}>
+       <div className={`absolute top-0 right-0 h-full bg-[#0a0a0a]/90 backdrop-blur-2xl border-l border-white/10 w-80 transition-transform duration-300 z-[60] flex flex-col ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'} ${state.isFullscreen ? 'shadow-2xl' : ''}`}>
             <div className="flex items-center justify-between p-4 border-b border-white/10">
                 <div className="flex gap-4">
                     <button onClick={() => setActiveSidebarTab('storyboard')} className={`text-xs font-bold uppercase ${activeSidebarTab === 'storyboard' ? 'text-white' : 'text-gray-500'}`}>Storyboard</button>
@@ -1490,7 +1490,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                 <button onClick={() => setIsSidebarOpen(false)}><ChevronRight size={18} /></button>
             </div>
             
-            <div className="h-full overflow-y-auto pb-20 p-4 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto pb-20 p-4 custom-scrollbar">
                 {activeSidebarTab === 'storyboard' && (
                     <div className="space-y-4">
                         <button onClick={() => addNote()} className="w-full py-3 bg-white/5 border border-white/10 rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-white/10 transition-colors">
