@@ -318,3 +318,49 @@ export const loadPlannerEntries = async () => {
         return [];
     }
 };
+
+export const saveStoryIdea = async (idea: any) => {
+    try {
+        const dbPayload = {
+            id: idea.id,
+            title: idea.title,
+            description: idea.description,
+            tags: idea.tags,
+            created_at: idea.createdAt
+        };
+        const { error } = await supabase.from('story_ideas').upsert(dbPayload);
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.error("Save Story Idea Error", e);
+        return false;
+    }
+};
+
+export const deleteStoryIdea = async (id: string) => {
+    try {
+        const { error } = await supabase.from('story_ideas').delete().eq('id', id);
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.error("Delete Story Idea Error", e);
+        return false;
+    }
+};
+
+export const loadStoryIdeas = async () => {
+    try {
+        const { data, error } = await supabase.from('story_ideas').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        return data.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            tags: item.tags || [],
+            createdAt: Number(item.created_at)
+        }));
+    } catch (e) {
+        console.error("Load Story Ideas Error", e);
+        return [];
+    }
+};

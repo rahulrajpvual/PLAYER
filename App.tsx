@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import VideoPlayer from './components/VideoPlayer';
 import StoryboardReview from './components/StoryboardReview';
-import { loadFromCloud, fetchAllStoryboards, saveToCloud, loadPlannerEntries, savePlannerEntry, deletePlannerEntry, deleteStoryboard } from './services/firebase';
+import { loadFromCloud, fetchAllStoryboards, saveToCloud, loadPlannerEntries, savePlannerEntry, deletePlannerEntry, deleteStoryboard, saveStoryIdea, deleteStoryIdea, loadStoryIdeas } from './services/firebase';
 import { TopMovie } from './movieData';
 import { 
   Upload, Film, FileVideo, Layers, Shield, Zap, Clock, Trash2, Layout, 
@@ -10,9 +10,9 @@ import {
   MonitorPlay, Clapperboard, RefreshCcw, LogOut, ChevronLeft, Plus, CheckCircle2, XCircle,
   Activity, Tv, Monitor, Disc, Database, Ticket, Play
 } from 'lucide-react';
-import { Note, SceneSegment, ActivityLog, MovieMeta, PlannerEntry, StoredStoryboard } from './types';
+import { Note, SceneSegment, ActivityLog, MovieMeta, PlannerEntry, StoredStoryboard, StoryIdea } from './types';
 import { tmdbService } from './services/tmdbService';
-import { Globe, BookOpen as BookIcon } from 'lucide-react';
+import { Globe, BookOpen as BookIcon, Lightbulb, Hash } from 'lucide-react';
 
 // --- Helpers ---
 const formatMovieName = (filename: string): string => {
@@ -161,7 +161,11 @@ const App: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const observerTarget = React.useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [activeTab, setActiveTab] = useState<'home' | 'storyboards' | 'analysis' | 'calendar' | 'movies' | 'insights'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'storyboards' | 'analysis' | 'calendar' | 'movies' | 'insights' | 'ideas'>('home');
+  const [storyIdeas, setStoryIdeas] = useState<StoryIdea[]>([]);
+  const [isAddingIdea, setIsAddingIdea] = useState(false);
+  const [newIdea, setNewIdea] = useState({ title: "", description: "", tags: "" });
+  const [isIdeasLoading, setIsIdeasLoading] = useState(false);
   const [storyboards, setStoryboards] = useState<StoredStoryboard[]>([]);
   const [folders, setFolders] = useState<string[]>([]);
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
@@ -255,6 +259,36 @@ const App: React.FC = () => {
     }
   }, []);
 
+  const handleAddIdea = async () => {
+    if (!newIdea.title.trim()) return;
+    const idea: StoryIdea = {
+      id: Date.now().toString(),
+      title: newIdea.title,
+      description: newIdea.description,
+      tags: newIdea.tags.split(',').map(t => t.trim()).filter(t => t),
+      createdAt: Date.now()
+    };
+    const success = await saveStoryIdea(idea);
+    if (success) {
+      setStoryIdeas(prev => [idea, ...prev]);
+      setNewIdea({ title: "", description: "", tags: "" });
+      setIsAddingIdea(false);
+    } else {
+        alert("Failed to save idea to cloud.");
+    }
+  };
+
+  const handleDeleteIdea = async (id: string) => {
+    if (confirm("Delete this story idea? This cannot be undone.")) {
+      const success = await deleteStoryIdea(id);
+      if (success) {
+        setStoryIdeas(prev => prev.filter(i => i.id !== id));
+      } else {
+        alert("Failed to delete idea.");
+      }
+    }
+  };
+
   useEffect(() => {
     const loadRecentlyWatched = async () => {
         const watched = JSON.parse(localStorage.getItem('lumina_recently_watched') || '[]');
@@ -327,6 +361,12 @@ const App: React.FC = () => {
     const plans = await loadPlannerEntries();
     setPlannerEntries(plans);
     setIsPlannerLoading(false);
+
+    // Load Story Ideas
+    setIsIdeasLoading(true);
+    const ideas = await loadStoryIdeas();
+    setStoryIdeas(ideas);
+    setIsIdeasLoading(false);
 
     // Load Now Playing from Supabase/TMDB
     const nowPlaying = await tmdbService.getNowPlayingMovies();
@@ -613,6 +653,7 @@ const App: React.FC = () => {
                       { id: 'home', label: 'Home' },
                       { id: 'movies', label: 'Library' },
                       { id: 'calendar', label: 'Journal' },
+                      { id: 'ideas', label: 'Ideas' },
                       { id: 'analysis', label: 'Stats' },
                       { id: 'insights', label: 'Analytics' },
                   ].map((tab) => (
@@ -1304,6 +1345,138 @@ const App: React.FC = () => {
 
 
 
+              {activeTab === 'ideas' && (
+                  <div className="w-full px-8 pt-32 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-20">
+                      <div className="flex items-center justify-between mb-8">
+                          <div>
+                            <h2 className="text-3xl font-black uppercase tracking-tight">Story Vault</h2>
+                            <p className="text-gray-500 font-bold text-sm mt-1">Capture your next cinematic masterpiece.</p>
+                          </div>
+                          <button 
+                            onClick={() => setIsAddingIdea(true)}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-full font-black uppercase text-xs tracking-[0.2em] transition-all flex items-center gap-3 shadow-lg shadow-indigo-500/20 active:scale-95"
+                          >
+                              <Lightbulb size={16} /> Save New Idea
+                          </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {storyIdeas.map(idea => (
+                              <div key={idea.id} className="bg-[#121212] border border-white/10 rounded-2xl p-6 shadow-xl hover:border-indigo-500/30 transition-all group">
+                                  <div className="flex justify-between items-start mb-4">
+                                      <div className="bg-indigo-500/10 p-2.5 rounded-xl text-indigo-400">
+                                          <Lightbulb size={20} />
+                                      </div>
+                                      <button 
+                                        onClick={() => handleDeleteIdea(idea.id)}
+                                        className="text-gray-600 hover:text-red-500 transition-colors"
+                                      >
+                                          <Trash2 size={16} />
+                                      </button>
+                                  </div>
+                                  <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2 group-hover:text-indigo-400 transition-colors">{idea.title}</h3>
+                                  <p className="text-gray-400 text-sm font-medium leading-relaxed mb-6 line-clamp-4">
+                                      {idea.description}
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                      {idea.tags.map(tag => (
+                                          <span key={tag} className="flex items-center gap-1 bg-white/5 border border-white/5 px-3 py-1 rounded-full text-[9px] font-black uppercase text-gray-500 tracking-wider">
+                                              <Hash size={10} /> {tag}
+                                          </span>
+                                      ))}
+                                  </div>
+                                  <div className="mt-8 pt-4 border-t border-white/5 flex justify-between items-center text-[9px] font-black text-gray-700 uppercase tracking-widest">
+                                      <span>ID: {idea.id.slice(-6)}</span>
+                                      <span>{new Date(idea.createdAt).toLocaleDateString()}</span>
+                                  </div>
+                              </div>
+                          ))}
+
+                          {storyIdeas.length === 0 && !isIdeasLoading && (
+                              <div className="col-span-full py-32 flex flex-col items-center justify-center bg-[#121212]/50 border-2 border-dashed border-white/5 rounded-[2.5rem]">
+                                  <div className="bg-white/5 w-20 h-20 rounded-full flex items-center justify-center mb-6">
+                                      <Lightbulb size={32} className="text-gray-700" />
+                                  </div>
+                                  <p className="text-gray-500 font-black uppercase tracking-widest text-sm">No ideas saved yet</p>
+                                  <button 
+                                    onClick={() => setIsAddingIdea(true)}
+                                    className="mt-6 text-indigo-500 font-black uppercase text-xs tracking-widest hover:text-indigo-400 transition-all underline underline-offset-8"
+                                  >
+                                    Create your first concept
+                                  </button>
+                              </div>
+                          )}
+                      </div>
+
+                      {/* Add Idea Modal */}
+                      {isAddingIdea && (
+                          <div className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-2xl flex items-center justify-center p-6 animate-in fade-in duration-300">
+                              <div className="bg-[#0a0a0a] border border-white/10 w-full max-w-xl rounded-[2.5rem] p-10 shadow-[0_50px_100px_rgba(0,0,0,0.9)] relative overflow-hidden">
+                                  <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-[100px] rounded-full" />
+                                  
+                                  <div className="flex items-center gap-4 mb-8">
+                                      <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
+                                          <Lightbulb size={24} />
+                                      </div>
+                                      <div>
+                                          <h3 className="text-2xl font-[1000] uppercase tracking-tighter italic text-white leading-none">New Story Concept</h3>
+                                          <span className="text-gray-500 font-black text-[10px] uppercase tracking-widest">Architect of narratives</span>
+                                      </div>
+                                  </div>
+
+                                  <div className="space-y-6 relative z-10">
+                                      <div>
+                                          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Concept Title</label>
+                                          <input 
+                                            autoFocus
+                                            type="text" 
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-black uppercase text-sm placeholder:text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                                            placeholder="The Neon Wanderer..."
+                                            value={newIdea.title}
+                                            onChange={(e) => setNewIdea({...newIdea, title: e.target.value})}
+                                          />
+                                      </div>
+                                      <div>
+                                          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Narrative Description</label>
+                                          <textarea 
+                                            rows={5}
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-medium text-sm placeholder:text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all resize-none"
+                                            placeholder="In a world where memories are currency..."
+                                            value={newIdea.description}
+                                            onChange={(e) => setNewIdea({...newIdea, description: e.target.value})}
+                                          />
+                                      </div>
+                                      <div>
+                                          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Tags (comma separated)</label>
+                                          <input 
+                                            type="text" 
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-bold text-xs placeholder:text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                                            placeholder="Sci-Fi, Noir, Emotional..."
+                                            value={newIdea.tags}
+                                            onChange={(e) => setNewIdea({...newIdea, tags: e.target.value})}
+                                          />
+                                      </div>
+                                      
+                                      <div className="flex gap-4 pt-4">
+                                          <button 
+                                            onClick={handleAddIdea}
+                                            className="flex-1 bg-white text-black py-4 rounded-2xl font-[1000] uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-gray-200 transition-all active:scale-95"
+                                          >
+                                              Forge Concept
+                                          </button>
+                                          <button 
+                                            onClick={() => { setIsAddingIdea(false); setNewIdea({ title: "", description: "", tags: "" }); }}
+                                            className="flex-1 bg-white/5 text-gray-400 py-4 rounded-2xl font-[1000] uppercase text-xs tracking-[0.2em] hover:bg-white/10 transition-all"
+                                          >
+                                              Discard
+                                          </button>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      )}
+                  </div>
+              )}
               {activeTab === 'movies' && (
                   <div className="w-full px-8 pt-32 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-20">
                       <div className="flex items-center justify-between mb-8">

@@ -140,3 +140,11 @@ export interface StoredStoryboard {
   duration?: number;
   heatmap?: number[];
 }
+
+export interface StoryIdea {
+  id: string;
+  title: string;
+  description: string;
+  tags: string[];
+  createdAt: number;
+}
