@@ -1449,7 +1449,136 @@ const App: React.FC = () => {
                                         )}
                                     </div>
                                 </div>
+                                
+                                <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 lg:p-8 shadow-2xl relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 w-80 h-80 bg-pink-500/5 blur-[120px] rounded-full pointer-events-none" />
+                                    <div className="flex items-center justify-between mb-10">
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-pink-500/20 p-2.5 rounded-xl text-pink-500">
+                                                <Disc size={20} className="animate-pulse" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-black text-white uppercase tracking-tight text-lg">Cinematic Genome</h3>
+                                                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">3D Atomic Structure Analyis</p>
+                                            </div>
+                                        </div>
+                                        <div className="bg-white/5 border border-white/10 text-gray-500 text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.2em]">
+                                            Status: <span className="text-pink-500">Encoded</span>
+                                        </div>
+                                    </div>
 
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                                        <div className="space-y-10">
+                                            <div>
+                                                <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+                                                    <Hash size={14} className="text-indigo-400" /> Genomic Trace Sequence
+                                                </div>
+                                                <div className="bg-black/40 p-6 rounded-[2rem] border border-white/5 font-mono text-2xl font-black flex flex-wrap gap-x-4 gap-y-3 max-h-56 overflow-y-auto custom-scrollbar relative">
+                                                    {(selectedMovieData.segments || [])
+                                                        .sort((a,b) => a.startTime - b.startTime)
+                                                        .map((seg, i) => {
+                                                            const nuc = (() => {
+                                                                const t = seg.type.toLowerCase();
+                                                                if (t === 'action') return 'A';
+                                                                if (t === 'comedy') return 'C';
+                                                                if (t === 'suspense') return 'S';
+                                                                if (t === 'drama') return 'G'; // Guanine for Drama
+                                                                if (t === 'thriller') return 'T';
+                                                                if (t === 'dialogue') return 'V';
+                                                                if (t === 'romance') return 'R';
+                                                                return 'X';
+                                                            })();
+                                                            return (
+                                                                <span key={i} className="group relative cursor-help">
+                                                                    <span className={
+                                                                        seg.type === 'action' ? 'text-red-500' :
+                                                                        seg.type === 'comedy' ? 'text-yellow-400' :
+                                                                        seg.type === 'suspense' ? 'text-indigo-400' :
+                                                                        seg.type === 'drama' ? 'text-blue-500' :
+                                                                        'text-gray-600'
+                                                                    }>{nuc}</span>
+                                                                    <div className="opacity-0 group-hover:opacity-100 absolute -top-10 left-1/2 -translate-x-1/2 bg-black border border-white/10 p-2 rounded-xl text-[8px] whitespace-nowrap z-50 transition-all pointer-events-none uppercase shadow-2xl skew-x-2">
+                                                                        <div className="text-white/50 mb-1">{seg.type}</div>
+                                                                        <div className="text-indigo-400 font-mono">{Math.floor(seg.startTime/60)}:{(Math.floor(seg.startTime%60)).toString().padStart(2,'0')}</div>
+                                                                    </div>
+                                                                </span>
+                                                            );
+                                                        })}
+                                                    <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="bg-white/[0.02] p-6 rounded-2xl border border-white/5 relative overflow-hidden">
+                                                <div className="absolute top-0 left-0 w-1 h-full bg-pink-500/20" />
+                                                <div className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-4">Nucleotide Legend</div>
+                                                <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-[10px] font-bold text-gray-500">
+                                                    <div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef444466]" /> Adenine (Action)</div>
+                                                    <div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_#facc1566]" /> Cytosine (Comedy)</div>
+                                                    <div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f166]" /> Sugar (Suspense)</div>
+                                                    <div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f666]" /> Guanine (Drama)</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="h-[480px] bg-black/40 rounded-[2.5rem] border border-white/5 p-12 relative flex items-center justify-center overflow-hidden [perspective:1200px]">
+                                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(236,72,153,0.05)_0%,transparent_70%)]" />
+                                            {/* DNA Helix Container */}
+                                            <div className="w-40 h-full relative [transform-style:preserve-3d] animate-dna-spin">
+                                                {Array.from({ length: 30 }).map((_, i) => {
+                                                    const rotation = i * 24;
+                                                    const yOffset = (i * 14) - 210;
+                                                    const progress = i / 29;
+                                                    const time = progress * (selectedMovieData.duration || 1);
+                                                    const seg = selectedMovieData.segments?.find(s => time >= s.startTime && time <= s.endTime);
+                                                    const color = seg ? (
+                                                        seg.type === 'action' ? '#ef4444' :
+                                                        seg.type === 'comedy' ? '#facc15' :
+                                                        seg.type === 'suspense' ? '#6366f1' :
+                                                        seg.type === 'thriller' ? '#a855f7' :
+                                                        seg.type === 'drama' ? '#3b82f6' : '#4b5563'
+                                                    ) : '#1f2937';
+
+                                                    return (
+                                                        <div 
+                                                            key={i} 
+                                                            className="absolute top-1/2 left-1/2 [transform-style:preserve-3d]"
+                                                            style={{ 
+                                                                transform: `translate3d(-50%, -50%, 0) translateY(${yOffset}px) rotateY(${rotation}deg)` 
+                                                            }}
+                                                        >
+                                                            {/* Connector (Rung) */}
+                                                            <div className="w-32 h-[1.5px] bg-white/5 absolute -left-16 top-0" />
+                                                            {/* Nucleotides (Spheres) */}
+                                                            <div 
+                                                                className="w-4 h-4 rounded-full absolute -left-18 -top-2" 
+                                                                style={{ backgroundColor: color, boxShadow: `0 0 15px ${color}88` }}
+                                                            />
+                                                            <div 
+                                                                className="w-4 h-4 rounded-full absolute left-14 -top-2 bg-pink-500/80 shadow-[0_0_15px_#ec489988]"
+                                                            />
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            
+                                            <style dangerouslySetInnerHTML={{ __html: `
+                                                @keyframes dnaRotation {
+                                                    from { transform: rotateY(0deg); }
+                                                    to { transform: rotateY(360deg); }
+                                                }
+                                                .animate-dna-spin {
+                                                    animation: dnaRotation 12s linear infinite;
+                                                }
+                                            ` }} />
+
+                                            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50">
+                                                <div className="w-px h-12 bg-gradient-to-t from-transparent via-pink-500/40 to-transparent" />
+                                                <span className="text-[9px] font-black uppercase tracking-[0.5em] text-pink-500/60">Cinematic Nucleus</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl">
                                     <div className="flex items-center gap-3 mb-6 font-black text-gray-400 uppercase text-xs tracking-widest"><MonitorPlay size={16}/> Interaction Behavior</div>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1466,7 +1595,6 @@ const App: React.FC = () => {
                                         })}
                                     </div>
                                 </div>
-
                                     {selectedMovieData.heatmap && (
                                         <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
                                             <div className="flex items-center gap-3 mb-8 font-black text-gray-400 uppercase text-xs tracking-widest"><Activity size={16} className="text-emerald-500" /> Attention Heatmap (Engagement)</div>
