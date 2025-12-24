@@ -125,6 +125,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
   const [shots, setShots] = useState<Shot[]>([]);
   const [segments, setSegments] = useState<SceneSegment[]>([]);
 
+  const [pendingSegment, setPendingSegment] = useState<{type: SceneType, startTime: number, endTime: number} | null>(null);
+  const [countdown, setCountdown] = useState(0);
+
   const [state, setState] = useState<VideoState>({
     isPlaying: false,
     progress: 0,
@@ -152,9 +155,28 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
 
   const stateRef = useRef(state);
   const segmentsRef = useRef(segments);
+  const currentRatingRef = useRef(currentRating);
 
   useEffect(() => { stateRef.current = state; }, [state]);
   useEffect(() => { segmentsRef.current = segments; }, [segments]);
+  useEffect(() => { currentRatingRef.current = currentRating; }, [currentRating]);
+
+  // Handle countdown effect
+  useEffect(() => {
+    let interval: any;
+    if (countdown > 0) {
+      interval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            finalizePendingSegment();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [countdown]);
 
   // Cleanup
   useEffect(() => {
@@ -184,7 +206,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
        if (savedNotes) setNotes(savedNotes.sort((a,b) => b.timestamp - a.timestamp));
        
        const savedSegments = await loadFromCloud(`segments_${fname}`, 'filename', fname) as SceneSegment[];
-       if (savedSegments) setSegments(savedSegments);
+       if (savedSegments) setSegments(savedSegments.sort((a,b) => b.startTime - a.startTime));
 
        const metaStr = localStorage.getItem(`lumina_meta_${fname}`);
        if (metaStr) {
@@ -704,9 +726,28 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       setState(prev => ({...prev, inPoint: null, outPoint: null}));
   };
 
+  const finalizePendingSegment = useCallback(() => {
+      setPendingSegment(pending => {
+          if (pending) {
+              const newSeg: SceneSegment = {
+                  id: Date.now().toString(),
+                  startTime: pending.startTime,
+                  endTime: pending.endTime,
+                  type: pending.type,
+                  rating: currentRatingRef.current // Use ref for latest rating
+              };
+              setSegments(prev => [...prev, newSeg].sort((a,b) => b.startTime - a.startTime));
+              saveToCloud(`segments_${file.name}`, newSeg);
+              showFeedback(<div className="flex flex-col items-center uppercase"><Check size={40} className="text-green-500" /><span className="text-xs font-black">{pending.type} Finalized</span></div>);
+          }
+          return null;
+      });
+      setCountdown(0);
+  }, [file.name]);
+
   const addSceneSegment = useCallback((type: SceneType) => {
-      // Logic used by UI buttons - uses current state/refs to be safe
-      const s = stateRef.current; // Use ref for latest values if called from UI or elsewhere
+      // Logic used by UI buttons - triggers immediately
+      const s = stateRef.current; 
       let start = s.inPoint;
       let end = s.outPoint;
       const current = videoRef.current?.currentTime || 0;
@@ -714,44 +755,64 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       // Auto-Gap Logic
       if (start === null && end === null) {
           end = current;
-          // Find gap start from last segment
           const sorted = [...segmentsRef.current].sort((a,b) => b.endTime - a.endTime);
           const lastEnd = sorted.length > 0 ? sorted[0].endTime : 0;
-          
-          if (lastEnd < end) {
-              start = lastEnd;
-          } else {
-              start = Math.max(0, end - 5); // Default 5s if we jumped around
-          }
+          if (lastEnd < end) start = lastEnd;
+          else start = Math.max(0, end - 5);
       }
-      
       if (start !== null && end === null) end = current;
       if (start === null && end !== null) start = 0;
       
-      start = start ?? 0;
-      end = end ?? 0;
-
-      const safeStart = Math.min(start, end);
-      const safeEnd = Math.max(start, end);
+      const safeStart = Math.min(start ?? 0, end ?? 0);
+      const safeEnd = Math.max(start ?? 0, end ?? 0);
 
       const newSeg: SceneSegment = {
           id: Date.now().toString(),
           startTime: safeStart,
           endTime: safeEnd,
           type: type,
-          rating: currentRating
+          rating: currentRatingRef.current
       };
       
-      const updatedSegments = [...segmentsRef.current, newSeg].sort((a,b) => a.startTime - b.startTime);
+      const updatedSegments = [...segmentsRef.current, newSeg].sort((a,b) => b.startTime - a.startTime);
       setSegments(updatedSegments);
       saveToCloud(`segments_${file.name}`, newSeg);
       
       clearMarks();
       setCurrentRating(50); 
-      setIsSidebarOpen(true);
-      setActiveSidebarTab('scenes');
       showFeedback(<div className="flex flex-col items-center uppercase"><span className="text-2xl font-black">{type}</span><span className="text-xs">Segment Added</span></div>);
-  }, [file.name, currentRating]);
+  }, [file.name]);
+
+  const triggerSceneSegment = useCallback((type: SceneType) => {
+      // If one is already pending, finalize it first
+      if (pendingSegment) {
+          finalizePendingSegment();
+      }
+
+      const s = stateRef.current;
+      let start = s.inPoint;
+      let end = s.outPoint;
+      const current = videoRef.current?.currentTime || 0;
+
+      // Auto-Gap Logic
+      if (start === null && end === null) {
+          end = current;
+          const sorted = [...segmentsRef.current].sort((a,b) => b.endTime - a.endTime);
+          const lastEnd = sorted.length > 0 ? sorted[0].endTime : 0;
+          if (lastEnd < end) start = lastEnd;
+          else start = Math.max(0, end - 5);
+      }
+      if (start !== null && end === null) end = current;
+      if (start === null && end !== null) start = 0;
+      
+      const safeStart = Math.min(start ?? 0, end ?? 0);
+      const safeEnd = Math.max(start ?? 0, end ?? 0);
+
+      setPendingSegment({ type, startTime: safeStart, endTime: safeEnd });
+      setCountdown(15);
+      clearMarks();
+      showFeedback(<div className="flex flex-col items-center uppercase"><Timer size={40} /><span className="text-xs font-black">Rating Pending...</span></div>);
+  }, [pendingSegment, finalizePendingSegment]);
 
   const deleteSegment = (id: string) => {
       setSegments(prev => prev.filter(s => s.id !== id));
@@ -873,11 +934,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       
       setNotes(prev => [newNote, ...prev].sort((a, b) => b.timestamp - a.timestamp));
       saveToCloud(`notes_${file.name}`, { ...newNote, filename: file.name });
-      
-      if (!annotation) {
-        setIsSidebarOpen(true);
-        setActiveSidebarTab('storyboard');
-      }
   };
 
   const stopDrawing = () => {
@@ -1080,10 +1136,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
           return;
       }
 
-      // Genre Shortcuts
-      const performAddSegment = (type: SceneType) => {
+      // Genre Shortcuts Logic
+      const performTrigger = (type: SceneType) => {
           e.preventDefault();
-          addSceneSegment(type);
+          triggerSceneSegment(type);
       };
 
       switch(key) {
@@ -1093,6 +1149,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
           togglePlay();
           break;
         
+        case 'enter':
+          if (pendingSegment) {
+              e.preventDefault();
+              finalizePendingSegment();
+          }
+          break;
+
+        case 'escape':
+          if (pendingSegment) {
+              e.preventDefault();
+              setPendingSegment(null);
+              setCountdown(0);
+          }
+          break;
+
         // Navigation
         case 'arrowright':
         case 'l':
@@ -1149,15 +1220,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
           break;
 
         // Genre Shortcuts Logic
-        case 'a': performAddSegment('action'); break;
-        case 'c': performAddSegment('comedy'); break;
-        case 'd': performAddSegment('drama'); break;
-        case 't': performAddSegment('thriller'); break;
-        case 's': performAddSegment('song'); break;
-        case 'w': performAddSegment('twist'); break; // 'w' for twist
-        case 'h': performAddSegment('horror'); break;
-        case 'r': performAddSegment('romance'); break;
-        case 'v': performAddSegment('dialogue'); break; // 'v' for voice/dialogue
+        case 'a': performTrigger('action'); break;
+        case 'c': performTrigger('comedy'); break;
+        case 'd': performTrigger('drama'); break;
+        case 't': performTrigger('thriller'); break;
+        case 's': performTrigger('song'); break;
+        case 'w': performTrigger('twist'); break; 
+        case 'h': performTrigger('horror'); break;
+        case 'r': performTrigger('romance'); break;
+        case 'v': performTrigger('dialogue'); break; 
 
         case 'p':
           e.preventDefault();
@@ -1307,6 +1378,59 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
               <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none animate-in zoom-in fade-out duration-500">
                   <div className="bg-black/60 backdrop-blur-md p-6 rounded-3xl text-white shadow-2xl">
                       {feedbackIcon}
+                  </div>
+              </div>
+          )}
+
+          {/* Pending Segment HUD */}
+          {pendingSegment && (
+              <div className="absolute top-12 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4">
+                  <div className="bg-black/80 backdrop-blur-xl border border-indigo-500/30 px-6 py-4 rounded-2xl flex items-center gap-6 shadow-[0_0_50px_rgba(99,102,241,0.2)]">
+                      <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-1">Pending Entry</span>
+                          <span className="text-2xl font-[1000] text-white uppercase italic leading-none">{pendingSegment.type}</span>
+                      </div>
+                      
+                      <div className="h-10 w-px bg-white/10" />
+                      
+                      <div className="flex flex-col items-center">
+                          <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none mb-1">Rating</span>
+                          <span className="text-2xl font-black text-indigo-500 leading-none">{currentRating}</span>
+                      </div>
+
+                      <div className="h-10 w-px bg-white/10" />
+
+                      <div className="relative w-12 h-12 flex items-center justify-center">
+                          <svg className="w-full h-full -rotate-90">
+                              <circle 
+                                cx="24" cy="24" r="20" fill="transparent" 
+                                stroke="rgba(255,255,255,0.1)" strokeWidth="4" 
+                              />
+                              <circle 
+                                cx="24" cy="24" r="20" fill="transparent" 
+                                stroke="#6366f1" strokeWidth="4" 
+                                strokeDasharray={125.6}
+                                strokeDashoffset={125.6 * (1 - countdown / 15)}
+                                className="transition-all"
+                              />
+                          </svg>
+                          <span className="absolute text-lg font-black text-white">{countdown}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 ml-2">
+                           <button 
+                             onClick={finalizePendingSegment}
+                             className="p-2 bg-indigo-500 hover:bg-indigo-400 text-white rounded-lg transition-all active:scale-95 cursor-pointer"
+                           >
+                               <Check size={20} />
+                           </button>
+                           <button 
+                             onClick={() => { setPendingSegment(null); setCountdown(0); }}
+                             className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 rounded-lg transition-all cursor-pointer"
+                           >
+                               <X size={20} />
+                           </button>
+                      </div>
                   </div>
               </div>
           )}
