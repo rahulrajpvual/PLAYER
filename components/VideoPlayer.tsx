@@ -6,7 +6,7 @@ import {
   BookOpen, Camera, Trash2, ChevronRight, Image as ImageIcon,
   Zap, Heart, AlertCircle, Feather, Smile, Scissors, BarChart3, Tag, Film,
   Loader2, AlertTriangle, Volume2, VolumeX, Play, Pause, Speaker, Wand2,
-  Sword, Drama, Music, Skull, Ghost, HelpCircle, HeartHandshake, Clapperboard, Timer, Download, Circle, Plus, Edit2, Palette, Eye, Star, MessageSquare, TrendingUp
+  Sword, Drama, Music, Skull, Ghost, HelpCircle, HeartHandshake, Clapperboard, Timer, Download, Circle, Plus, Edit2, Palette, Eye, Star, MessageSquare, TrendingUp, Disc
 } from 'lucide-react';
 import { saveToCloud, loadFromCloud } from '../services/firebase';
 
@@ -623,11 +623,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
 
 
   // --- Export Logic (GIF / Clip) ---
-  const handleExportClip = () => {
+  const handleExportClip = useCallback((durationOverride?: number) => {
       if (!videoRef.current) return;
       
       const inTime = state.inPoint !== null ? state.inPoint : state.currentTime;
-      const outTime = state.outPoint !== null ? state.outPoint : (inTime + 5); // Default 5s if no out
+      const outTime = durationOverride 
+          ? (inTime + durationOverride) 
+          : (state.outPoint !== null ? state.outPoint : (inTime + 5));
+      
+      const setOut = outTime;
       
       // 1. Setup Recorder
       const stream = (videoRef.current as any).captureStream(); // Capture raw video stream
@@ -648,13 +652,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
               const a = document.createElement('a');
               a.href = url;
               const fname = file.name;
-              a.download = `clip_${fname}_${Math.floor(inTime)}_${Math.floor(outTime)}.webm`;
+              a.download = `gif_${fname}_${Math.floor(inTime)}.webm`;
               a.click();
               URL.revokeObjectURL(url);
               setIsExporting(false);
               videoRef.current?.pause();
               setState(prev => ({ ...prev, isPlaying: false }));
-              showFeedback(<div className="flex flex-col items-center"><Check size={40} className="text-green-500"/><span className="text-sm font-bold">Clip Saved</span></div>);
+              showFeedback(<div className="flex flex-col items-center"><Disc size={40} className="text-white animate-spin"/><span className="text-sm font-bold uppercase tracking-widest mt-2">{durationOverride ? 'GIF Captured' : 'Clip Saved'}</span></div>);
           };
 
           // 2. Start Logic
@@ -662,13 +666,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
           videoRef.current.currentTime = inTime;
           videoRef.current.play().then(() => {
               mediaRecorder.start();
+              
+              // Schedule stop
+              const durationMs = (setOut - inTime) * 1000;
+              setTimeout(() => {
+                  if (mediaRecorder.state === 'recording') {
+                      mediaRecorder.stop();
+                  }
+              }, durationMs);
           });
           
       } catch (e) {
           console.error("Recording failed", e);
           setIsExporting(false);
       }
-  };
+  }, [state.inPoint, state.outPoint, state.currentTime, file.name]);
 
 
   // --- In/Out Points Logic ---
@@ -1146,6 +1158,23 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
         case 'h': performAddSegment('horror'); break;
         case 'r': performAddSegment('romance'); break;
         case 'v': performAddSegment('dialogue'); break; // 'v' for voice/dialogue
+
+        case 'p':
+          e.preventDefault();
+          addNote();
+          showFeedback(<div className="flex flex-col items-center"><Camera size={40} /><span className="text-xs font-black uppercase mt-2">Snapshot Added to Journal</span></div>);
+          break;
+        
+        case 'g':
+          e.preventDefault();
+          const duration = window.prompt("Enter duration for GIF capture (seconds):", "3");
+          if (duration) {
+              const d = parseFloat(duration);
+              if (!isNaN(d) && d > 0) {
+                  handleExportClip(d);
+              }
+          }
+          break;
       }
     };
 
