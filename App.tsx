@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import VideoPlayer from './components/VideoPlayer';
 import StoryboardReview from './components/StoryboardReview';
-import { loadFromCloud, fetchAllStoryboards, saveToCloud, loadPlannerEntries, savePlannerEntry, deletePlannerEntry } from './services/firebase';
+import { loadFromCloud, fetchAllStoryboards, saveToCloud, loadPlannerEntries, savePlannerEntry, deletePlannerEntry, deleteStoryboard } from './services/firebase';
 import { TopMovie } from './movieData';
 import { 
   Upload, Film, FileVideo, Layers, Shield, Zap, Clock, Trash2, Layout, 
@@ -242,6 +242,17 @@ const App: React.FC = () => {
     const existing = JSON.parse(localStorage.getItem('lumina_recently_watched') || '[]');
     const updated = [filename, ...existing.filter((f: string) => f !== filename)].slice(0, 20);
     localStorage.setItem('lumina_recently_watched', JSON.stringify(updated));
+  }, []);
+
+  const handleDeleteStoryboard = useCallback(async (filename: string) => {
+    if (confirm(`Are you sure you want to delete analysis for "${formatMovieName(filename)}"? This cannot be undone.`)) {
+        const success = await deleteStoryboard(filename);
+        if (success) {
+            setStoryboards(prev => prev.filter(s => s.filename !== filename));
+        } else {
+            alert("Failed to delete storyboard from cloud.");
+        }
+    }
   }, []);
 
   useEffect(() => {
@@ -858,7 +869,7 @@ const App: React.FC = () => {
               )}
 
               {activeTab === 'calendar' && (
-                  <div className="w-full flex flex-col md:flex-row h-full md:h-[calc(100vh-100px)] overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
+                  <div className="w-full flex flex-col md:flex-row h-full md:h-[calc(100vh-100px)] pt-32 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
                       {/* Main Calendar Area */}
                       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 pb-32 md:pb-20">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
@@ -1109,7 +1120,7 @@ const App: React.FC = () => {
               )}
 
               {activeTab === 'analysis' && (
-                <div className="w-full px-8 pt-8 animate-in fade-in slide-in-from-bottom-8 duration-500">
+                <div className="w-full px-8 pt-32 animate-in fade-in slide-in-from-bottom-8 duration-500">
                     <h2 className="text-3xl font-black mb-8 uppercase tracking-tight">Studio Analytics</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 flex items-center gap-4 shadow-xl"><div className="p-3 bg-indigo-500/20 rounded-xl text-indigo-400"><Layers size={24}/></div><div><div className="text-2xl font-black text-white">{totalFrames}</div><div className="text-xs text-gray-500 font-bold uppercase">Total Frames Logged</div></div></div>
@@ -1146,7 +1157,7 @@ const App: React.FC = () => {
               )}
 
               {activeTab === 'insights' && (
-                <div className="w-full px-8 pt-8 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-20">
+                <div className="w-full px-8 pt-32 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-20">
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h2 className="text-3xl font-black uppercase tracking-tight">Movie Insights</h2>
@@ -1294,7 +1305,7 @@ const App: React.FC = () => {
 
 
               {activeTab === 'movies' && (
-                  <div className="w-full px-8 pt-8 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-20">
+                  <div className="w-full px-8 pt-32 animate-in fade-in slide-in-from-bottom-8 duration-500 pb-20">
                       <div className="flex items-center justify-between mb-8">
                         <h2 className="text-3xl font-black uppercase tracking-tight">Media Library</h2>
                         <div className="flex gap-2"><button className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"><CalendarIcon size={18} /></button><button className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"><Star size={18} /></button></div>
@@ -1307,7 +1318,15 @@ const App: React.FC = () => {
                                       <div className="aspect-[2/3] bg-black relative">
                                           {poster ? <img src={poster} alt={movie.filename} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" /> : <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-700"><Clapperboard size={40} /></div>}
                                           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
-                                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30"><MonitorPlay size={24} fill="white" /></div></div>
+                                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30"><MonitorPlay size={24} fill="white" /></div>
+                                          </div>
+                                          <button 
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteStoryboard(movie.filename); }}
+                                            className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-red-600/80 backdrop-blur-md rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all border border-white/10"
+                                          >
+                                              <Trash2 size={16} />
+                                          </button>
                                       </div>
                                       <div className="p-4">
                                           <h3 className="font-black text-white truncate mb-1 uppercase tracking-wide" title={movie.filename}>

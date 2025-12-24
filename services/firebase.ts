@@ -246,6 +246,22 @@ export const fetchAllStoryboards = async (): Promise<any[]> => {
     }
 };
 
+export const deleteStoryboard = async (filename: string) => {
+    try {
+        const { error: notesError } = await supabase.from('notes').delete().eq('filename', filename);
+        const { error: segmentsError } = await supabase.from('scene_segments').delete().eq('filename', filename);
+        
+        if (notesError || segmentsError) {
+            console.error("Error deleting storyboard", notesError, segmentsError);
+            return false;
+        }
+        return true;
+    } catch (e) {
+        console.error("Delete Storyboard Exception", e);
+        return false;
+    }
+};
+
 export const savePlannerEntry = async (entry: any) => {
     try {
         const dbPayload = {
