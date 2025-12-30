@@ -78,6 +78,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
   const channelGainNodesRef = useRef<GainNode[]>([]);
   const masterGainRef = useRef<GainNode | null>(null);
   const compressorNodeRef = useRef<DynamicsCompressorNode | null>(null);
+  const audioDelayNodeRef = useRef<DelayNode | null>(null);
 
   const [src, setSrc] = useState<string>('');
   const [gridMode, setGridMode] = useState<GridMode>('none');
@@ -129,6 +130,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
 
   const [pendingSegment, setPendingSegment] = useState<{type: SceneType, startTime: number, endTime: number} | null>(null);
   const [countdown, setCountdown] = useState(0);
+  const [currentCues, setCurrentCues] = useState<string[]>([]);
 
   const [state, setState] = useState<VideoState>({
     isPlaying: false,
@@ -152,7 +154,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
     inPoint: null,
     outPoint: null,
     audioHeatmap: undefined,
-    scalingMode: 'contain'
+    scalingMode: 'contain',
+    isAudioBypass: false,
+    subtitleSync: 0,
+    audioSync: 0,
+    subtitleSize: 24,
+    subtitlePosition: 0
   });
 
   const stateRef = useRef(state);
@@ -403,10 +410,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
 
   // --- Audio Graph Logic ---
   const initAudioContext = () => {
+    if (state.isAudioBypass) {
+        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+            audioContextRef.current.close();
+            audioContextRef.current = null;
+        }
+        return;
+    }
+
     if (!audioContextRef.current && videoRef.current) {
       try {
         const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-        // Letting browser decide sample rate is more robust across hardware
         audioContextRef.current = new Ctx();
         sourceNodeRef.current = audioContextRef.current.createMediaElementSource(videoRef.current);
         splitterNodeRef.current = audioContextRef.current.createChannelSplitter(6);
@@ -419,6 +433,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
         compressorNodeRef.current = audioContextRef.current.createDynamicsCompressor();
         compressorNodeRef.current.threshold.value = -24;
         compressorNodeRef.current.ratio.value = 12;
+        
+        audioDelayNodeRef.current = audioContextRef.current.createDelay(5.0); // Max 5s delay
         masterGainRef.current = audioContextRef.current.createGain();
 
         sourceNodeRef.current.connect(splitterNodeRef.current);
@@ -434,7 +450,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
   };
 
   const updateAudioGraph = () => {
-    if (!mergerNodeRef.current || !audioContextRef.current || !masterGainRef.current || !compressorNodeRef.current) return;
+    if (state.isAudioBypass) return;
+    if (!mergerNodeRef.current || !audioContextRef.current || !masterGainRef.current || !compressorNodeRef.current || !audioDelayNodeRef.current) return;
     
     // Final gain is product of UI volume and potential cinema mode boost
     const baseGain = state.isMuted ? 0 : state.volume;
@@ -449,24 +466,30 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
         }
     });
 
+    // Apply audio sync delay
+    const delay = Math.max(0, state.audioSync); // Standard DelayNode only supports positive delay
+    audioDelayNodeRef.current.delayTime.setTargetAtTime(delay, ctx.currentTime, 0.03);
+
     // Apply master gain (volume control)
     masterGainRef.current.gain.setTargetAtTime(baseGain * modeMultiplier, ctx.currentTime, 0.03);
 
     mergerNodeRef.current.disconnect();
     compressorNodeRef.current.disconnect();
+    audioDelayNodeRef.current.disconnect();
 
     if (state.isCinemaMode) {
-        // Source -> Splitter -> Gains -> Merger -> Compressor -> MasterGain -> Dest
+        // Source -> Splitter -> Gains -> Merger -> Compressor -> Delay -> MasterGain -> Dest
         mergerNodeRef.current.connect(compressorNodeRef.current);
-        compressorNodeRef.current.connect(masterGainRef.current);
+        compressorNodeRef.current.connect(audioDelayNodeRef.current);
     } else {
-        // Source -> Splitter -> Gains -> Merger -> MasterGain -> Dest
-        mergerNodeRef.current.connect(masterGainRef.current);
+        // Source -> Splitter -> Gains -> Merger -> Delay -> MasterGain -> Dest
+        mergerNodeRef.current.connect(audioDelayNodeRef.current);
     }
+    audioDelayNodeRef.current.connect(masterGainRef.current);
     masterGainRef.current.connect(ctx.destination);
   };
 
-  useEffect(() => { updateAudioGraph(); }, [state.audioChannels, state.isCinemaMode, state.volume, state.isMuted]);
+  useEffect(() => { updateAudioGraph(); }, [state.audioChannels, state.isCinemaMode, state.volume, state.isMuted, state.isAudioBypass, state.audioSync]);
   const toggleAudioChannel = (index: number) => {
       const newChannels = [...state.audioChannels];
       newChannels[index] = !newChannels[index];
@@ -533,19 +556,26 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       return () => clearInterval(interval);
   }, [src]);
 
-  // Handle Internal Subtitle switching
+  // Handle Subtitle track switching for Custom Overlay
   useEffect(() => {
-      // If activeSubtitleId starts with 'embedded-', we find that track and set mode showing
-      if(activeSubtitleId.startsWith('embedded-')) {
-          const idx = parseInt(activeSubtitleId.split('-')[1]);
-          if(videoRef.current && videoRef.current.textTracks[idx]) {
-            Array.from(videoRef.current.textTracks).forEach((t: any) => t.mode = 'hidden');
-            videoRef.current.textTracks[idx].mode = 'showing';
+      if(!videoRef.current) return;
+      const vid = videoRef.current;
+      
+      // Set all tracks to 'hidden' (so events fire but native UI is off) OR 'disabled'
+      Array.from(vid.textTracks).forEach((t: any) => {
+          // If this track matches our active ID, set to 'hidden' so we can read its cues
+          // Otherwise set to 'disabled' to save performance
+          const isMatch = (t.id === activeSubtitleId || t.label === activeSubtitleId);
+          // Special case for embedded tracks which we might have labeled as embedded-0 etc
+          const isEmbeddedMatch = activeSubtitleId.startsWith('embedded-') && vid.textTracks[parseInt(activeSubtitleId.split('-')[1])] === t;
+          
+          if (activeSubtitleId !== 'off' && (isMatch || isEmbeddedMatch)) {
+              t.mode = 'hidden';
+          } else {
+              t.mode = 'disabled';
           }
-      } else if (activeSubtitleId === 'off') {
-          if(videoRef.current) Array.from(videoRef.current.textTracks).forEach((t: any) => t.mode = 'hidden');
-      }
-  }, [activeSubtitleId]);
+      });
+  }, [activeSubtitleId, subtitles]);
 
   // --- Color Analysis Logic ---
   const generateColorBarcode = async () => {
@@ -870,6 +900,37 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
           reader.readAsText(file);
       }
   };
+
+  // --- Subtitle & Audio Sync Handlers ---
+  useEffect(() => {
+    if (!videoRef.current) return;
+    const vid = videoRef.current;
+    
+    const updateCues = () => {
+        const currentTime = vid.currentTime - state.subtitleSync; // Apply delay
+        const active: string[] = [];
+        
+        for (let i = 0; i < vid.textTracks.length; i++) {
+            const track = vid.textTracks[i];
+            // Check if track is active
+            if (track.mode === 'showing' || track.mode === 'hidden') {
+                const cues = track.cues;
+                if (cues) {
+                    for (let j = 0; j < cues.length; j++) {
+                        const cue = cues[j] as VTTCue;
+                        if (currentTime >= cue.startTime && currentTime <= cue.endTime) {
+                            active.push(cue.text);
+                        }
+                    }
+                }
+            }
+        }
+        setCurrentCues(active);
+    };
+
+    vid.addEventListener('timeupdate', updateCues);
+    return () => vid.removeEventListener('timeupdate', updateCues);
+  }, [state.subtitleSync, activeSubtitleId]);
 
   const handleAudioTrackSelect = (id: string) => {
       const vid = videoRef.current as any;
@@ -1330,10 +1391,36 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                       src={track.src}
                       label={track.label}
                       srcLang={track.language}
-                      default={activeSubtitleId === track.id}
+                      // Mode is managed via the useEffect above
                   />
               ))}
           </video>
+
+          {/* KMPlayer Style Subtitle Overlay */}
+          {currentCues.length > 0 && (
+              <div 
+                className="absolute left-0 right-0 z-40 pointer-events-none flex flex-col items-center justify-end px-12"
+                style={{ 
+                    bottom: `${15 + state.subtitlePosition}%`, // Customizable position
+                }}
+              >
+                  {currentCues.map((text, i) => (
+                      <div 
+                        key={i} 
+                        className="text-center drop-shadow-[0_2px_4px_rgba(0,0,0,1)] font-bold transition-all"
+                        style={{ 
+                            fontSize: `${state.subtitleSize}px`,
+                            color: '#ffffff', // Typical KMPlayer white (can add toggle for Yellow)
+                            textShadow: '2px 2px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000, 0px 1px 0px #000',
+                            backgroundColor: 'rgba(0,0,0,0.05)', // Subtle background
+                            padding: '4px 8px',
+                            lineHeight: '1.2'
+                        }}
+                        dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br/>') }}
+                      />
+                  ))}
+              </div>
+          )}
           
           {/* Compare Video Layer (Split Screen) */}
           {state.isCompareMode && (
@@ -1520,6 +1607,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                 setBrushColor={setBrushColor}
                 brushSize={brushSize}
                 setBrushSize={setBrushSize}
+                onSubtitleSyncChange={(val) => setState(s => ({ ...s, subtitleSync: val }))}
+                onAudioSyncChange={(val) => setState(s => ({ ...s, audioSync: val }))}
+                onSubtitleSizeChange={(val) => setState(s => ({ ...s, subtitleSize: val }))}
+                onSubtitlePositionChange={(val) => setState(s => ({ ...s, subtitlePosition: val }))}
            />
 
        </div>
@@ -1819,10 +1910,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
             </div>
        </div>
 
-       {/* Top Bar (Close) */}
-       <div className="absolute top-0 left-0 p-4 z-50">
-           <button onClick={onClose} className="bg-black/50 p-2 border border-white/20 hover:bg-white text-white hover:text-black transition-colors rounded-none"><X size={20}/></button>
-       </div>
+        {/* Top Bar (Close) */}
+        <div className="absolute top-0 left-0 right-0 p-4 z-50 flex justify-between items-start pointer-events-none">
+            <button onClick={onClose} className="bg-black/50 p-2 border border-white/20 hover:bg-white text-white hover:text-black transition-colors rounded-none pointer-events-auto"><X size={20}/></button>
+            
+            <div className="flex gap-2 pointer-events-auto">
+                <button 
+                    onClick={() => {
+                        const newBypass = !state.isAudioBypass;
+                        setState(s => ({ ...s, isAudioBypass: newBypass }));
+                        showFeedback(<div className="flex flex-col items-center"><Speaker size={40} className={newBypass ? 'text-amber-500' : 'text-indigo-500'} /><span className="text-[10px] font-black uppercase mt-2">{newBypass ? 'Compatibility Mode: ON' : 'Pro Mixer: ON'}</span></div>);
+                    }}
+                    className={`px-3 py-1.5 border text-[10px] font-black uppercase tracking-widest transition-all ${state.isAudioBypass ? 'bg-amber-600 border-amber-400 text-white' : 'bg-black/50 border-white/20 text-gray-400 hover:border-white'}`}
+                    title="Toggle compatibility mode if you have no sound"
+                >
+                    {state.isAudioBypass ? 'Audio Bypass ON' : 'Audio Bypass OFF'}
+                </button>
+            </div>
+        </div>
 
        {/* Hidden File Input for Subtitles */}
        <input 

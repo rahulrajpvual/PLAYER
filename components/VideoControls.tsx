@@ -42,6 +42,10 @@ interface VideoControlsProps {
   setBrushColor: (c: string) => void;
   brushSize: number;
   setBrushSize: (s: number) => void;
+  onSubtitleSyncChange: (val: number) => void;
+  onAudioSyncChange: (val: number) => void;
+  onSubtitleSizeChange: (val: number) => void;
+  onSubtitlePositionChange: (val: number) => void;
 }
 
 const formatTime = (time: number) => {
@@ -106,7 +110,11 @@ const VideoControls: React.FC<VideoControlsProps> = ({
   brushSize,
   setBrushSize,
   gridMode,
-  onGridModeChange
+  onGridModeChange,
+  onSubtitleSyncChange,
+  onAudioSyncChange,
+  onSubtitleSizeChange,
+  onSubtitlePositionChange
 }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showAudioMixer, setShowAudioMixer] = useState(false);
@@ -586,9 +594,78 @@ const VideoControls: React.FC<VideoControlsProps> = ({
                         </button>
                       ))}
                    </div>
-                   <button onClick={onSubtitleUpload} className="w-full py-1.5 bg-indigo-500/20 text-indigo-300 rounded text-xs font-bold hover:bg-indigo-500/30 transition-colors border border-indigo-500/30">
-                     Upload .SRT / .VTT
-                   </button>
+                    <div className="flex gap-2">
+                        <button onClick={onSubtitleUpload} className="flex-1 py-1.5 bg-indigo-500/20 text-indigo-300 rounded text-[10px] font-black uppercase hover:bg-indigo-500/30 transition-colors border border-indigo-500/30">
+                            Upload .SRT
+                        </button>
+                    </div>
+
+                    {/* Advanced Controls */}
+                    <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-white/10">
+                        <div>
+                            <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2">Sync</div>
+                            <div className="space-y-3">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] text-gray-400 uppercase tracking-widest">Subtitle ({state.subtitleSync.toFixed(1)}s)</span>
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => onSubtitleSyncChange(state.subtitleSync - 0.1)} className="p-1 bg-white/5 hover:bg-white/10 rounded"><ChevronsLeft size={14}/></button>
+                                        <button onClick={() => onSubtitleSyncChange(state.subtitleSync + 0.1)} className="p-1 bg-white/5 hover:bg-white/10 rounded"><ChevronsRight size={14}/></button>
+                                        <button onClick={() => onSubtitleSyncChange(0)} className="text-[8px] opacity-40 hover:opacity-100 uppercase font-black">Reset</button>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] text-gray-400 uppercase tracking-widest">Audio ({state.audioSync.toFixed(1)}s)</span>
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => onAudioSyncChange(state.audioSync - 0.1)} className="p-1 bg-white/5 hover:bg-white/10 rounded"><ChevronsLeft size={14}/></button>
+                                        <button onClick={() => onAudioSyncChange(state.audioSync + 0.1)} className="p-1 bg-white/5 hover:bg-white/10 rounded"><ChevronsRight size={14}/></button>
+                                        <button onClick={() => onAudioSyncChange(0)} className="text-[8px] opacity-40 hover:opacity-100 uppercase font-black">Reset</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2">Style</div>
+                            <div className="space-y-3">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] text-gray-400 uppercase tracking-widest">Size ({state.subtitleSize}px)</span>
+                                    <input 
+                                        type="range" min="12" max="64" step="1"
+                                        value={state.subtitleSize}
+                                        onChange={(e) => onSubtitleSizeChange(parseInt(e.target.value))}
+                                        className="w-full accent-indigo-500 h-1 bg-white/10 rounded-full"
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] text-gray-400 uppercase tracking-widest">Position ({state.subtitlePosition}%)</span>
+                                    <input 
+                                        type="range" min="0" max="50" step="1"
+                                        value={state.subtitlePosition}
+                                        onChange={(e) => onSubtitlePositionChange(parseInt(e.target.value))}
+                                        className="w-full accent-indigo-500 h-1 bg-white/10 rounded-full"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Audio Track Selection (KMPlayer Style) */}
+                    {audioTracks.length > 1 && (
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                            <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2">Audio Tracks</div>
+                            <div className="space-y-1">
+                                {audioTracks.map(track => (
+                                    <button 
+                                        key={track.id}
+                                        onClick={() => onAudioTrackSelect(track.id)}
+                                        className={`w-full text-left px-2 py-1.5 rounded text-[10px] font-medium flex justify-between uppercase tracking-widest ${track.enabled ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5'}`}
+                                    >
+                                        <span>{track.label || 'Unknown Track'} ({track.language || '??'})</span>
+                                        {track.enabled && <Check size={12} />}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
               )}
             </div>

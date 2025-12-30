@@ -26,6 +26,11 @@ export interface VideoState {
   outPoint: number | null; // Mark Out timestamp
   audioHeatmap?: number[]; // Normalized amplitude data (0-1)
   scalingMode: 'contain' | 'cover'; // Zoom to fill support
+  isAudioBypass: boolean; // Compatibility mode for audio
+  subtitleSync: number; // Subtitle delay in seconds
+  audioSync: number; // Audio delay in seconds
+  subtitleSize: number; // Subtitle font size in px
+  subtitlePosition: number; // Subtitle Y-position shift in px
 }
 
 export interface SubtitleTrack {

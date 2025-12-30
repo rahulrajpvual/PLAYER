@@ -165,11 +165,17 @@ const DiagnosticPanel = () => {
         const check = async () => {
             // Check connectivity by trying to ping a known table
             const { error } = await supabase.from('activity_logs').select('count', { count: 'exact', head: true });
-            const mkvSupport = document.createElement('video').canPlayType('video/x-matroska');
+            
+            const v = document.createElement('video');
+            const mkvSupport = v.canPlayType('video/x-matroska');
+            const aacSupport = v.canPlayType('audio/aac');
+            const mp4aSupport = v.canPlayType('audio/mp4; codecs="mp4a.40.2"');
+            
             setStats({ 
                 supabase: error ? 'offline' : 'online', 
                 storage: 'ok', 
-                mkv: mkvSupport ? 'supported' : 'limited' 
+                mkv: mkvSupport ? 'supported' : 'limited',
+                audio: (aacSupport || mp4aSupport) ? 'aac-ok' : 'limited'
             });
         };
         check();
@@ -188,12 +194,17 @@ const DiagnosticPanel = () => {
                 <span className="text-[8px] font-black uppercase tracking-widest text-gray-200">Storage: Online</span>
             </div>
             <div className="flex items-center gap-2">
+                <div className={`w-1.5 h-1.5 rounded-full ${stats.audio === 'aac-ok' ? 'bg-indigo-500' : 'bg-amber-500'}`} />
+                <span className="text-[8px] font-black uppercase tracking-widest text-gray-200">Audio: {stats.audio.toUpperCase()}</span>
+            </div>
+            <div className="flex items-center gap-2">
                 <div className={`w-1.5 h-1.5 rounded-full ${stats.mkv === 'supported' ? 'bg-indigo-500' : 'bg-gray-700'}`} />
                 <span className="text-[8px] font-black uppercase tracking-widest text-gray-200">Codec: MKV {stats.mkv}</span>
             </div>
-            {stats.supabase === 'offline' && (
-                <div className="pt-2 border-t border-white/5">
-                    <div className="text-[7px] text-amber-500 font-bold leading-tight">TABLES MISSING.<br/>RUN SQL FOR CLOUD SYNC.</div>
+            {(stats.supabase === 'offline' || stats.audio === 'limited') && (
+                <div className="pt-2 border-t border-white/5 space-y-1">
+                    {stats.supabase === 'offline' && <div className="text-[7px] text-amber-500 font-bold leading-tight">SYSCFG: LOCAL ONLY</div>}
+                    {stats.audio === 'limited' && <div className="text-[7px] text-red-500 font-bold leading-tight uppercase tracking-tight">CORS/AAC CODES WARNING</div>}
                 </div>
             )}
         </div>
