@@ -433,8 +433,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
             for (let i = 0; i < 6; i++) {
                 const gain = ctx.createGain();
                 channelGainNodesRef.current.push(gain);
-                splitterNodeRef.current.connect(gain, i);
-                gain.connect(mergerNodeRef.current, 0, i);
             }
 
             compressorNodeRef.current = ctx.createDynamicsCompressor();
@@ -443,20 +441,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
 
             audioDelayNodeRef.current = ctx.createDelay(5.0);
             masterGainRef.current = ctx.createGain();
-            
-            // Initial routing is done in updateAudioGraph
         }
 
         updateAudioGraph();
     } catch (e) {
         console.error("Audio Initialization Error:", e);
-        // If Web Audio fails, we fallback to native as much as possible 
-        // by NOT setting up the graph if it errors out early.
     }
   };
 
   const updateAudioGraph = () => {
-    if (!audioContextRef.current || !sourceNodeRef.current || !masterGainRef.current) return;
+    if (!audioContextRef.current || !sourceNodeRef.current || !masterGainRef.current || !splitterNodeRef.current || !mergerNodeRef.current) return;
     
     const ctx = audioContextRef.current;
     if (ctx.state === 'closed') return;
@@ -464,28 +458,33 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
     const baseGain = state.isMuted ? 0 : state.volume;
     const modeMultiplier = state.isCinemaMode ? 1.5 : 1.0;
 
-    // Disconnect everything to rebuild fresh route
+    // Disconnect EVERYTHING to rebuild fresh route
     sourceNodeRef.current.disconnect();
-    splitterNodeRef.current?.disconnect();
-    mergerNodeRef.current?.disconnect();
+    splitterNodeRef.current.disconnect();
+    channelGainNodesRef.current.forEach(g => g.disconnect());
+    mergerNodeRef.current.disconnect();
     compressorNodeRef.current?.disconnect();
     audioDelayNodeRef.current?.disconnect();
     masterGainRef.current.disconnect();
 
     if (state.isAudioBypass) {
-        // DIRECT BYPASS: Source -> Destination
-        // We still use masterGain for volume if we can
+        // DIRECT BYPASS: Source -> MasterGain -> Dest
         sourceNodeRef.current.connect(masterGainRef.current);
         masterGainRef.current.connect(ctx.destination);
     } else {
         // PRO MIXER: Source -> Splitter -> Gains -> Merger -> [Compressor] -> Delay -> MasterGain -> Dest
         sourceNodeRef.current.connect(splitterNodeRef.current);
         
-        state.audioChannels.forEach((isActive, i) => {
-            if (channelGainNodesRef.current[i]) {
-                channelGainNodesRef.current[i].gain.setTargetAtTime(isActive ? 1 : 0, ctx.currentTime, 0.03);
+        for (let i = 0; i < 6; i++) {
+            const gainNode = channelGainNodesRef.current[i];
+            if (gainNode) {
+                splitterNodeRef.current.connect(gainNode, i);
+                gainNode.connect(mergerNodeRef.current, 0, i);
+                
+                const isActive = state.audioChannels[i];
+                gainNode.gain.setTargetAtTime(isActive ? 1 : 0, ctx.currentTime, 0.03);
             }
-        });
+        }
 
         const delay = Math.max(0, state.audioSync);
         if (audioDelayNodeRef.current) {
@@ -1108,7 +1107,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
         setState(prev => ({ ...prev, isPlaying: false }));
         logInteraction('pause');
       } else {
-        videoRef.current.play();
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.error("Playback failed:", error);
+                // Potential fallback if audio context blocks playback
+            });
+        }
         compareVideoRef.current?.play();
         showFeedback(<Play size={40} fill="currentColor" />);
         setState(prev => ({ ...prev, isPlaying: true }));

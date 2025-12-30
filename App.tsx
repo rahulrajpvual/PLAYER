@@ -686,7 +686,7 @@ const App: React.FC = () => {
 
   return (
     <div className={`relative w-full bg-[#050505] text-white flex flex-col font-sans selection:bg-indigo-500/30 ${file || playingStoryboard ? 'h-screen overflow-hidden fixed inset-0' : 'min-h-screen overflow-x-hidden overflow-y-auto'} scroll-smooth`}>
-      <DiagnosticPanel />
+      {!file && <DiagnosticPanel />}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 bg-[#050505]">
         {/* Technical Grid Background */}
         <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
