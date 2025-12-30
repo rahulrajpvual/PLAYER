@@ -410,83 +410,104 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
 
   // --- Audio Graph Logic ---
   const initAudioContext = () => {
-    if (state.isAudioBypass) {
-        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-            audioContextRef.current.close();
-            audioContextRef.current = null;
+    if (!videoRef.current) return;
+    
+    try {
+        if (!audioContextRef.current) {
+            const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+            audioContextRef.current = new Ctx();
         }
-        return;
-    }
 
-    if (!audioContextRef.current && videoRef.current) {
-      try {
-        const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-        audioContextRef.current = new Ctx();
-        sourceNodeRef.current = audioContextRef.current.createMediaElementSource(videoRef.current);
-        splitterNodeRef.current = audioContextRef.current.createChannelSplitter(6);
-        channelGainNodesRef.current = [];
-        for (let i = 0; i < 6; i++) {
-            const gain = audioContextRef.current.createGain();
-            channelGainNodesRef.current.push(gain);
-        }
-        mergerNodeRef.current = audioContextRef.current.createChannelMerger(6);
-        compressorNodeRef.current = audioContextRef.current.createDynamicsCompressor();
-        compressorNodeRef.current.threshold.value = -24;
-        compressorNodeRef.current.ratio.value = 12;
+        const ctx = audioContextRef.current;
         
-        audioDelayNodeRef.current = audioContextRef.current.createDelay(5.0); // Max 5s delay
-        masterGainRef.current = audioContextRef.current.createGain();
-
-        sourceNodeRef.current.connect(splitterNodeRef.current);
-        for (let i = 0; i < 6; i++) {
-            splitterNodeRef.current.connect(channelGainNodesRef.current[i], i);
-            channelGainNodesRef.current[i].connect(mergerNodeRef.current, 0, i);
+        if (ctx.state === 'suspended') {
+            ctx.resume();
         }
+
+        if (!sourceNodeRef.current) {
+            sourceNodeRef.current = ctx.createMediaElementSource(videoRef.current);
+            splitterNodeRef.current = ctx.createChannelSplitter(6);
+            mergerNodeRef.current = ctx.createChannelMerger(6);
+            
+            channelGainNodesRef.current = [];
+            for (let i = 0; i < 6; i++) {
+                const gain = ctx.createGain();
+                channelGainNodesRef.current.push(gain);
+                splitterNodeRef.current.connect(gain, i);
+                gain.connect(mergerNodeRef.current, 0, i);
+            }
+
+            compressorNodeRef.current = ctx.createDynamicsCompressor();
+            compressorNodeRef.current.threshold.value = -24;
+            compressorNodeRef.current.ratio.value = 12;
+
+            audioDelayNodeRef.current = ctx.createDelay(5.0);
+            masterGainRef.current = ctx.createGain();
+            
+            // Initial routing is done in updateAudioGraph
+        }
+
         updateAudioGraph();
-      } catch (e) { console.error("Audio Init Failed", e); }
-    } else if (audioContextRef.current?.state === 'suspended') {
-      audioContextRef.current.resume();
+    } catch (e) {
+        console.error("Audio Initialization Error:", e);
+        // If Web Audio fails, we fallback to native as much as possible 
+        // by NOT setting up the graph if it errors out early.
     }
   };
 
   const updateAudioGraph = () => {
-    if (state.isAudioBypass) return;
-    if (!mergerNodeRef.current || !audioContextRef.current || !masterGainRef.current || !compressorNodeRef.current || !audioDelayNodeRef.current) return;
+    if (!audioContextRef.current || !sourceNodeRef.current || !masterGainRef.current) return;
     
-    // Final gain is product of UI volume and potential cinema mode boost
+    const ctx = audioContextRef.current;
+    if (ctx.state === 'closed') return;
+
     const baseGain = state.isMuted ? 0 : state.volume;
     const modeMultiplier = state.isCinemaMode ? 1.5 : 1.0;
-    const ctx = audioContextRef.current;
 
-    // Apply channel gains from the mixer
-    state.audioChannels.forEach((isActive, i) => {
-        if (channelGainNodesRef.current[i]) {
-            // Smoothly ramp gain to avoid pops/clicks
-            channelGainNodesRef.current[i].gain.setTargetAtTime(isActive ? 1 : 0, ctx.currentTime, 0.03);
-        }
-    });
+    // Disconnect everything to rebuild fresh route
+    sourceNodeRef.current.disconnect();
+    splitterNodeRef.current?.disconnect();
+    mergerNodeRef.current?.disconnect();
+    compressorNodeRef.current?.disconnect();
+    audioDelayNodeRef.current?.disconnect();
+    masterGainRef.current.disconnect();
 
-    // Apply audio sync delay
-    const delay = Math.max(0, state.audioSync); // Standard DelayNode only supports positive delay
-    audioDelayNodeRef.current.delayTime.setTargetAtTime(delay, ctx.currentTime, 0.03);
-
-    // Apply master gain (volume control)
-    masterGainRef.current.gain.setTargetAtTime(baseGain * modeMultiplier, ctx.currentTime, 0.03);
-
-    mergerNodeRef.current.disconnect();
-    compressorNodeRef.current.disconnect();
-    audioDelayNodeRef.current.disconnect();
-
-    if (state.isCinemaMode) {
-        // Source -> Splitter -> Gains -> Merger -> Compressor -> Delay -> MasterGain -> Dest
-        mergerNodeRef.current.connect(compressorNodeRef.current);
-        compressorNodeRef.current.connect(audioDelayNodeRef.current);
+    if (state.isAudioBypass) {
+        // DIRECT BYPASS: Source -> Destination
+        // We still use masterGain for volume if we can
+        sourceNodeRef.current.connect(masterGainRef.current);
+        masterGainRef.current.connect(ctx.destination);
     } else {
-        // Source -> Splitter -> Gains -> Merger -> Delay -> MasterGain -> Dest
-        mergerNodeRef.current.connect(audioDelayNodeRef.current);
+        // PRO MIXER: Source -> Splitter -> Gains -> Merger -> [Compressor] -> Delay -> MasterGain -> Dest
+        sourceNodeRef.current.connect(splitterNodeRef.current);
+        
+        state.audioChannels.forEach((isActive, i) => {
+            if (channelGainNodesRef.current[i]) {
+                channelGainNodesRef.current[i].gain.setTargetAtTime(isActive ? 1 : 0, ctx.currentTime, 0.03);
+            }
+        });
+
+        const delay = Math.max(0, state.audioSync);
+        if (audioDelayNodeRef.current) {
+            audioDelayNodeRef.current.delayTime.setTargetAtTime(delay, ctx.currentTime, 0.03);
+        }
+
+        if (state.isCinemaMode && compressorNodeRef.current) {
+            mergerNodeRef.current.connect(compressorNodeRef.current);
+            compressorNodeRef.current.connect(audioDelayNodeRef.current);
+        } else {
+            mergerNodeRef.current.connect(audioDelayNodeRef.current);
+        }
+        
+        audioDelayNodeRef.current.connect(masterGainRef.current);
+        masterGainRef.current.connect(ctx.destination);
     }
-    audioDelayNodeRef.current.connect(masterGainRef.current);
-    masterGainRef.current.connect(ctx.destination);
+
+    // Always apply master volume
+    masterGainRef.current.gain.setTargetAtTime(baseGain * modeMultiplier, ctx.currentTime, 0.03);
+    
+    // Resume context if needed
+    if (ctx.state === 'suspended') ctx.resume();
   };
 
   useEffect(() => { updateAudioGraph(); }, [state.audioChannels, state.isCinemaMode, state.volume, state.isMuted, state.isAudioBypass, state.audioSync]);
