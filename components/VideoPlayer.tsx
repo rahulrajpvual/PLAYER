@@ -1869,7 +1869,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                                              onClick={() => { if(videoRef.current) videoRef.current.currentTime = seg.startTime; }}
                                          >
                                              <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-indigo-600 text-[8px] px-1.5 py-0.5 rounded whitespace-nowrap z-50 font-bold shadow-xl border border-white/10">
-                                                 {seg.type.toUpperCase()}: {seg.rating}%
+                                                 {(seg.type || 'scene').toUpperCase()}: {seg.rating}%
                                              </div>
                                          </div>
                                      ))}
