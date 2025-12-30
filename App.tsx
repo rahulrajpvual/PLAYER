@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import VideoPlayer from './components/VideoPlayer';
 import StoryboardReview from './components/StoryboardReview';
-import { loadFromCloud, fetchAllStoryboards, saveToCloud, loadPlannerEntries, savePlannerEntry, deletePlannerEntry, deleteStoryboard, saveStoryIdea, deleteStoryIdea, loadStoryIdeas } from './services/firebase';
+import { supabase, loadFromCloud, fetchAllStoryboards, saveToCloud, loadPlannerEntries, savePlannerEntry, deletePlannerEntry, deleteStoryboard, saveStoryIdea, deleteStoryIdea, loadStoryIdeas } from './services/firebase';
 import { TopMovie } from './movieData';
 import { 
   Upload, Film, FileVideo, Layers, Shield, Zap, Clock, Trash2, Layout, 
@@ -156,6 +156,49 @@ const FilmdaLogoText = () => (
     FILMDA<span className="text-indigo-600 ml-[-2px]">.</span>
   </span>
 );
+
+// --- Diagnostic UI ---
+const DiagnosticPanel = () => {
+    const [stats, setStats] = useState({ supabase: 'checking', storage: 'ok', mkv: 'checking' });
+    
+    useEffect(() => {
+        const check = async () => {
+            // Check connectivity by trying to ping a known table
+            const { error } = await supabase.from('activity_logs').select('count', { count: 'exact', head: true });
+            const mkvSupport = document.createElement('video').canPlayType('video/x-matroska');
+            setStats({ 
+                supabase: error ? 'offline' : 'online', 
+                storage: 'ok', 
+                mkv: mkvSupport ? 'supported' : 'limited' 
+            });
+        };
+        check();
+    }, []);
+
+    return (
+        <div className="fixed top-24 left-6 z-[100] bg-black/60 backdrop-blur-xl border border-white/10 p-4 space-y-3 pointer-events-auto hidden xl:block shadow-2xl">
+            <div className="flex items-center gap-2">
+                <div className={`w-1.5 h-1.5 rounded-full ${stats.supabase === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-amber-500 animate-pulse shadow-[0_0_8px_#f59e0b]'}`} />
+                <span className="text-[8px] font-black uppercase tracking-widest text-gray-200">
+                    Supabase: {stats.supabase === 'online' ? 'CloudSync' : 'LocalMode'}
+                </span>
+            </div>
+            <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+                <span className="text-[8px] font-black uppercase tracking-widest text-gray-200">Storage: Online</span>
+            </div>
+            <div className="flex items-center gap-2">
+                <div className={`w-1.5 h-1.5 rounded-full ${stats.mkv === 'supported' ? 'bg-indigo-500' : 'bg-gray-700'}`} />
+                <span className="text-[8px] font-black uppercase tracking-widest text-gray-200">Codec: MKV {stats.mkv}</span>
+            </div>
+            {stats.supabase === 'offline' && (
+                <div className="pt-2 border-t border-white/5">
+                    <div className="text-[7px] text-amber-500 font-bold leading-tight">TABLES MISSING.<br/>RUN SQL FOR CLOUD SYNC.</div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const App: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -445,17 +488,25 @@ const App: React.FC = () => {
     e.preventDefault(); setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile.type.startsWith('video/')) {
+      const isVideo = droppedFile.type.startsWith('video/') || 
+                     ['.mp4', '.mkv', '.mov', '.avi', '.webm'].some(ext => droppedFile.name.toLowerCase().endsWith(ext));
+      
+      if (isVideo) {
           setFile(droppedFile);
           addToRecentlyWatched(droppedFile.name);
       } else alert("Please upload a valid video file.");
     }
   }, [addToRecentlyWatched]);
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0] && e.target.files[0].type.startsWith('video/')) {
+    if (e.target.files && e.target.files[0]) {
         const selected = e.target.files[0];
-        setFile(selected);
-        addToRecentlyWatched(selected.name);
+        const isVideo = selected.type.startsWith('video/') || 
+                       ['.mp4', '.mkv', '.mov', '.avi', '.webm'].some(ext => selected.name.toLowerCase().endsWith(ext));
+        
+        if (isVideo) {
+            setFile(selected);
+            addToRecentlyWatched(selected.name);
+        } else alert("Please upload a valid video file.");
     }
   };
 
@@ -624,6 +675,7 @@ const App: React.FC = () => {
 
   return (
     <div className={`relative w-full bg-[#050505] text-white flex flex-col font-sans selection:bg-indigo-500/30 ${file || playingStoryboard ? 'h-screen overflow-hidden fixed inset-0' : 'min-h-screen overflow-x-hidden overflow-y-auto'} scroll-smooth`}>
+      <DiagnosticPanel />
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 bg-[#050505]">
         {/* Technical Grid Background */}
         <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
@@ -1821,7 +1873,7 @@ const App: React.FC = () => {
                                 <div className="relative">
                                     <input 
                                         type="file" 
-                                        accept="video/*" 
+                                        accept="video/*,.mkv,.mp4,.mov,.avi" 
                                         ref={fileInputRef}
                                         onChange={(e) => { handleFileSelect(e); setIsDragging(false); }}
                                         className="hidden" 

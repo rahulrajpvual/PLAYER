@@ -329,7 +329,14 @@ export const saveStoryIdea = async (idea: any) => {
             created_at: idea.createdAt
         };
         const { error } = await supabase.from('story_ideas').upsert(dbPayload);
-        if (error) throw error;
+        
+        if (error) {
+            console.warn("Supabase Save Failed, falling back to LocalStorage:", error.message);
+            const localIdeas = JSON.parse(localStorage.getItem('lumina_story_ideas_fallback') || '[]');
+            const updated = [idea, ...localIdeas.filter((i: any) => i.id !== idea.id)];
+            localStorage.setItem('lumina_story_ideas_fallback', JSON.stringify(updated));
+            return true;
+        }
         return true;
     } catch (e) {
         console.error("Save Story Idea Error", e);
@@ -340,7 +347,15 @@ export const saveStoryIdea = async (idea: any) => {
 export const deleteStoryIdea = async (id: string) => {
     try {
         const { error } = await supabase.from('story_ideas').delete().eq('id', id);
-        if (error) throw error;
+        
+        // Always try to delete from local as well in case we're in fallback mode
+        const localIdeas = JSON.parse(localStorage.getItem('lumina_story_ideas_fallback') || '[]');
+        localStorage.setItem('lumina_story_ideas_fallback', JSON.stringify(localIdeas.filter((i: any) => i.id !== id)));
+
+        if (error) {
+            console.warn("Supabase Delete Failed (likely missing table), handled via LocalStorage.");
+            return true; 
+        }
         return true;
     } catch (e) {
         console.error("Delete Story Idea Error", e);
@@ -351,16 +366,31 @@ export const deleteStoryIdea = async (id: string) => {
 export const loadStoryIdeas = async () => {
     try {
         const { data, error } = await supabase.from('story_ideas').select('*').order('created_at', { ascending: false });
-        if (error) throw error;
-        return data.map((item: any) => ({
+        
+        const localIdeas = JSON.parse(localStorage.getItem('lumina_story_ideas_fallback') || '[]');
+
+        if (error) {
+            console.warn("Supabase Table 'story_ideas' missing or inaccessible. Serving Local Mode.");
+            return localIdeas;
+        }
+
+        const dbIdeas = data.map((item: any) => ({
             id: item.id,
             title: item.title,
             description: item.description,
             tags: item.tags || [],
             createdAt: Number(item.created_at)
         }));
+
+        // Merge local and DB (DB takes priority)
+        const combined = [...dbIdeas];
+        localIdeas.forEach((li: any) => {
+            if (!combined.find(ci => ci.id === li.id)) combined.push(li);
+        });
+
+        return combined;
     } catch (e) {
         console.error("Load Story Ideas Error", e);
-        return [];
+        return JSON.parse(localStorage.getItem('lumina_story_ideas_fallback') || '[]');
     }
 };

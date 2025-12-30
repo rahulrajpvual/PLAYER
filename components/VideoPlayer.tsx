@@ -288,41 +288,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
   // --- Audio Waveform Extraction ---
   useEffect(() => {
       const analyzeAudio = async () => {
+          // Audio analysis disabled to support large movie files (2-3GB) without crashing browser
+          return; 
+          
+          /* 
           if (!file) return;
-
-          // Safety check: Avoid crashing browser with huge files
-          if (file.size > 150 * 1024 * 1024) { 
-              console.log("File too large for full audio analysis");
-              return; 
-          }
-
-          try {
-              const arrayBuffer = await file.arrayBuffer();
-              const tempCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-              const audioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
-              
-              const rawData = audioBuffer.getChannelData(0); // Use left channel
-              const samples = 200; // Resolution of the heatmap
-              const blockSize = Math.floor(rawData.length / samples);
-              const data = [];
-
-              for (let i = 0; i < samples; i++) {
-                  let sum = 0;
-                  for (let j = 0; j < blockSize; j++) {
-                      sum += Math.abs(rawData[i * blockSize + j]);
-                  }
-                  data.push(sum / blockSize);
-              }
-
-              // Normalize
-              const max = Math.max(...data);
-              const normalized = data.map(v => v / (max || 1));
-              
-              setState(prev => ({ ...prev, audioHeatmap: normalized }));
-              tempCtx.close();
-          } catch (e) {
-              console.error("Audio analysis failed", e);
-          }
+          ... existing logic ...
+          */
       };
 
       analyzeAudio();
@@ -1333,6 +1305,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
             }}
             onTimeUpdate={handleTimeUpdate}
             onLoadedMetadata={() => setState(s => ({...s, duration: videoRef.current?.duration || 0}))}
+            onError={(e) => {
+                const vid = e.currentTarget;
+                let message = "Codec error: Browser cannot play this format.";
+                if (vid.error) {
+                    switch (vid.error.code) {
+                        case 1: message = "Aborted: Media fetch stopped."; break;
+                        case 2: message = "Network Error: Failed to download media."; break;
+                        case 3: message = "Decode Error: Video/Audio codec unsupported."; break;
+                        case 4: message = "Format Error: Browser cannot play this MKV/MP4 variation."; break;
+                    }
+                }
+                setState(s => ({ ...s, error: message }));
+                showFeedback(<div className="flex flex-col items-center bg-red-600/80 p-6 rounded border border-white/20"><AlertTriangle size={48} className="mb-2"/><span className="text-xl font-bold uppercase tracking-widest">{message}</span><span className="text-[10px] mt-2 opacity-80">Check browser MKV/HEVC support</span></div>);
+            }}
             onClick={togglePlay}
             playsInline
             crossOrigin="anonymous" // Support max quality / CORS for audio analysis

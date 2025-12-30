@@ -12,19 +12,19 @@ create table if not exists public.story_ideas (
 -- Enable Row Level Security (RLS)
 alter table public.story_ideas enable row level security;
 
--- Create policies (adjust as needed for your auth setup)
-create policy "Users can view their own ideas"
+-- Create policies (Public for "everyone" support as requested)
+create policy "Anyone can view ideas"
 on public.story_ideas for select
-using ( auth.uid() = user_id );
+using ( true );
 
-create policy "Users can insert their own ideas"
+create policy "Anyone can insert ideas"
 on public.story_ideas for insert
-with check ( auth.uid() = user_id );
+with check ( true );
 
-create policy "Users can update their own ideas"
+create policy "Anyone can update ideas"
 on public.story_ideas for update
-using ( auth.uid() = user_id );
+using ( true );
 
-create policy "Users can delete their own ideas"
+create policy "Anyone can delete ideas"
 on public.story_ideas for delete
-using ( auth.uid() = user_id );
+using ( true );
