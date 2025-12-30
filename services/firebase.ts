@@ -331,7 +331,7 @@ export const saveStoryIdea = async (idea: any) => {
         const { error } = await supabase.from('story_ideas').upsert(dbPayload);
         
         if (error) {
-            console.warn("Supabase Save Failed, falling back to LocalStorage:", error.message);
+            // Quietly fallback
             const localIdeas = JSON.parse(localStorage.getItem('lumina_story_ideas_fallback') || '[]');
             const updated = [idea, ...localIdeas.filter((i: any) => i.id !== idea.id)];
             localStorage.setItem('lumina_story_ideas_fallback', JSON.stringify(updated));
@@ -353,7 +353,6 @@ export const deleteStoryIdea = async (id: string) => {
         localStorage.setItem('lumina_story_ideas_fallback', JSON.stringify(localIdeas.filter((i: any) => i.id !== id)));
 
         if (error) {
-            console.warn("Supabase Delete Failed (likely missing table), handled via LocalStorage.");
             return true; 
         }
         return true;
@@ -370,7 +369,7 @@ export const loadStoryIdeas = async () => {
         const localIdeas = JSON.parse(localStorage.getItem('lumina_story_ideas_fallback') || '[]');
 
         if (error) {
-            console.warn("Supabase Table 'story_ideas' missing or inaccessible. Serving Local Mode.");
+            // Silently fallback to local mode if table is missing (common with new setups)
             return localIdeas;
         }
 
