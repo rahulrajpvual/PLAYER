@@ -358,7 +358,7 @@ const VideoControls: React.FC<VideoControlsProps> = ({
                       width: `${width}%`,
                       backgroundColor: getGenreColor(seg.type)
                     }}
-                    title={`${seg.type.toUpperCase()}: ${formatTime(seg.startTime)} - ${formatTime(seg.endTime)}`}
+                    title={`${(seg.type || 'scene').toUpperCase()}: ${formatTime(seg.startTime)} - ${formatTime(seg.endTime)}`}
                   >
                       <div className="absolute inset-0 bg-white opacity-0 group-hover/seg:opacity-20 transition-opacity" />
                   </div>

@@ -159,7 +159,7 @@ const FilmdaLogoText = () => (
 
 // --- Diagnostic UI ---
 const DiagnosticPanel = () => {
-    const [stats, setStats] = useState({ supabase: 'checking', storage: 'ok', mkv: 'checking' });
+    const [stats, setStats] = useState({ supabase: 'checking', storage: 'ok', mkv: 'checking', audio: 'checking' });
     
     useEffect(() => {
         const check = async () => {
@@ -195,7 +195,7 @@ const DiagnosticPanel = () => {
             </div>
             <div className="flex items-center gap-2">
                 <div className={`w-1.5 h-1.5 rounded-full ${stats.audio === 'aac-ok' ? 'bg-indigo-500' : 'bg-amber-500'}`} />
-                <span className="text-[8px] font-black uppercase tracking-widest text-gray-200">Audio: {stats.audio.toUpperCase()}</span>
+                <span className="text-[8px] font-black uppercase tracking-widest text-gray-200">Audio: {(stats.audio || 'checking').toUpperCase()}</span>
             </div>
             <div className="flex items-center gap-2">
                 <div className={`w-1.5 h-1.5 rounded-full ${stats.mkv === 'supported' ? 'bg-indigo-500' : 'bg-gray-700'}`} />
