@@ -170,6 +170,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
   useEffect(() => { stateRef.current = state; }, [state]);
   useEffect(() => { segmentsRef.current = segments; }, [segments]);
   useEffect(() => { currentRatingRef.current = currentRating; }, [currentRating]);
+  
+  // Sync volume with native element (needed if re-mounted via isPureNativeAudio)
+  useEffect(() => {
+    if (videoRef.current) {
+        videoRef.current.volume = state.volume;
+        videoRef.current.muted = state.isMuted;
+    }
+  }, [state.volume, state.isMuted, state.isPureNativeAudio]);
 
   const logInteraction = useCallback((type: InteractionEvent['type'], metadata?: any) => {
     if (!videoRef.current) return;
@@ -456,6 +464,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
     const ctx = audioContextRef.current;
     if (ctx.state === 'closed') return;
 
+    if (state.isPureNativeAudio) {
+        sourceNodeRef.current?.disconnect();
+        masterGainRef.current?.disconnect();
+        if (ctx.state === 'running') ctx.suspend();
+        return;
+    }
+
     const baseGain = state.isMuted ? 0 : state.volume;
     const modeMultiplier = state.isCinemaMode ? 1.5 : 1.0;
 
@@ -507,10 +522,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
     masterGainRef.current.gain.setTargetAtTime(baseGain * modeMultiplier, ctx.currentTime, 0.03);
     
     // Resume context if needed
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx.state === 'suspended' && !state.isPureNativeAudio) ctx.resume();
   };
 
-  useEffect(() => { updateAudioGraph(); }, [state.audioChannels, state.isCinemaMode, state.volume, state.isMuted, state.isAudioBypass, state.audioSync]);
+  useEffect(() => { updateAudioGraph(); }, [state.audioChannels, state.isCinemaMode, state.volume, state.isMuted, state.isAudioBypass, state.audioSync, state.isPureNativeAudio]);
   const toggleAudioChannel = (index: number) => {
       const newChannels = [...state.audioChannels];
       newChannels[index] = !newChannels[index];

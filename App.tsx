@@ -170,12 +170,18 @@ const DiagnosticPanel = () => {
             const mkvSupport = v.canPlayType('video/x-matroska');
             const aacSupport = v.canPlayType('audio/aac');
             const mp4aSupport = v.canPlayType('audio/mp4; codecs="mp4a.40.2"');
+            const ac3Support = v.canPlayType('audio/mp4; codecs="ac-3"');
+            const eac3Support = v.canPlayType('audio/mp4; codecs="ec-3"');
             
+            let audioStatus = 'limited';
+            if (aacSupport || mp4aSupport) audioStatus = 'aac-ok';
+            if (ac3Support || eac3Support) audioStatus = 'surround-ok';
+
             setStats({ 
                 supabase: error ? 'offline' : 'online', 
                 storage: 'ok', 
                 mkv: mkvSupport ? 'supported' : 'limited',
-                audio: (aacSupport || mp4aSupport) ? 'aac-ok' : 'limited'
+                audio: audioStatus
             });
         };
         check();
@@ -204,7 +210,8 @@ const DiagnosticPanel = () => {
             {(stats.supabase === 'offline' || stats.audio === 'limited') && (
                 <div className="pt-2 border-t border-white/5 space-y-1">
                     {stats.supabase === 'offline' && <div className="text-[7px] text-amber-500 font-bold leading-tight">SYSCFG: LOCAL ONLY</div>}
-                    {stats.audio === 'limited' && <div className="text-[7px] text-red-500 font-bold leading-tight uppercase tracking-tight">CORS/AAC CODES WARNING</div>}
+                    {stats.audio === 'limited' && <div className="text-[7px] text-red-500 font-bold leading-tight uppercase tracking-tight italic">Chrome lacks E-AC3. Use Edge/Safari.</div>}
+                    {stats.audio === 'surround-ok' && <div className="text-[7px] text-indigo-400 font-bold leading-tight uppercase tracking-tight">Surround (E-AC3) Enabled</div>}
                 </div>
             )}
         </div>
