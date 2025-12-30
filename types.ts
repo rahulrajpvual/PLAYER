@@ -31,6 +31,7 @@ export interface VideoState {
   audioSync: number; // Audio delay in seconds
   subtitleSize: number; // Subtitle font size in px
   subtitlePosition: number; // Subtitle Y-position shift in px
+  isPureNativeAudio: boolean; // Complete bypass of Web Audio (forces reload)
 }
 
 export interface SubtitleTrack {

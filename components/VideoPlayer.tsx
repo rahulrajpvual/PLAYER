@@ -159,7 +159,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
     subtitleSync: 0,
     audioSync: 0,
     subtitleSize: 24,
-    subtitlePosition: 0
+    subtitlePosition: 0,
+    isPureNativeAudio: false
   });
 
   const stateRef = useRef(state);
@@ -410,7 +411,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
 
   // --- Audio Graph Logic ---
   const initAudioContext = () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || state.isPureNativeAudio) return;
     
     try {
         if (!audioContextRef.current) {
@@ -1384,6 +1385,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
           
           {/* Video Layer */}
           <video 
+            key={state.isPureNativeAudio ? 'native' : 'pro'}
             ref={videoRef}
             src={src}
             className={`transition-all duration-300 ${state.scalingMode === 'cover' ? 'w-full h-full object-cover' : 'w-full h-full object-contain'} ${state.visualFilter === 'monochrome' ? 'grayscale' : ''} ${state.visualFilter === 'negative' ? 'invert' : ''}`}
@@ -1391,7 +1393,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                 filter: state.visualFilter === 'false-color' ? 'hue-rotate(180deg) invert(1)' : undefined
             }}
             onTimeUpdate={handleTimeUpdate}
-            onLoadedMetadata={() => setState(s => ({...s, duration: videoRef.current?.duration || 0}))}
+            onLoadedMetadata={() => {
+                setState(prev => ({ ...prev, duration: videoRef.current?.duration || 0 }));
+                if (!state.isPureNativeAudio) initAudioContext();
+            }}
             onError={(e) => {
                 const vid = e.currentTarget;
                 let message = "Codec error: Browser cannot play this format.";
@@ -1637,6 +1642,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                 onAudioSyncChange={(val) => setState(s => ({ ...s, audioSync: val }))}
                 onSubtitleSizeChange={(val) => setState(s => ({ ...s, subtitleSize: val }))}
                 onSubtitlePositionChange={(val) => setState(s => ({ ...s, subtitlePosition: val }))}
+                onToggleAudioBypass={() => setState(s => ({ ...s, isAudioBypass: !s.isAudioBypass }))}
+                onTogglePureNative={() => setState(s => ({ ...s, isPureNativeAudio: !s.isPureNativeAudio }))}
            />
 
        </div>

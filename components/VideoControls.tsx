@@ -46,6 +46,8 @@ interface VideoControlsProps {
   onAudioSyncChange: (val: number) => void;
   onSubtitleSizeChange: (val: number) => void;
   onSubtitlePositionChange: (val: number) => void;
+  onToggleAudioBypass: () => void;
+  onTogglePureNative: () => void;
 }
 
 const formatTime = (time: number) => {
@@ -114,7 +116,9 @@ const VideoControls: React.FC<VideoControlsProps> = ({
   onSubtitleSyncChange,
   onAudioSyncChange,
   onSubtitleSizeChange,
-  onSubtitlePositionChange
+  onSubtitlePositionChange,
+  onToggleAudioBypass,
+  onTogglePureNative
 }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showAudioMixer, setShowAudioMixer] = useState(false);
@@ -601,6 +605,24 @@ const VideoControls: React.FC<VideoControlsProps> = ({
                     </div>
 
                     {/* Advanced Controls */}
+                    <div className="border-t border-white/5 mt-4 pt-4 space-y-3">
+                        <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2 px-1">Audio Compatibility</div>
+                        <div className="flex flex-col gap-2">
+                            <button 
+                                onClick={onToggleAudioBypass}
+                                className={`w-full py-2 px-3 rounded text-[10px] font-black uppercase tracking-widest text-left border transition-all ${state.isAudioBypass ? 'bg-amber-600/20 border-amber-500/50 text-amber-400 font-bold' : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`}
+                            >
+                                {state.isAudioBypass ? 'FX_BYPASS: ON' : 'FX_BYPASS: OFF'}
+                            </button>
+                            <button 
+                                onClick={onTogglePureNative}
+                                className={`w-full py-2 px-3 rounded text-[10px] font-black uppercase tracking-widest text-left border transition-all ${state.isPureNativeAudio ? 'bg-red-600/20 border-red-500/50 text-red-400 font-bold' : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`}
+                            >
+                                {state.isPureNativeAudio ? 'PURE_NATIVE: ON' : 'PURE_NATIVE: OFF'}
+                            </button>
+                            <p className="text-[8px] text-gray-600 italic px-1 leading-tight">Use PURE_NATIVE if sound is missing (best for EAC3/AC3).</p>
+                        </div>
+                    </div>
                     <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-white/10">
                         <div>
                             <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2">Sync</div>
