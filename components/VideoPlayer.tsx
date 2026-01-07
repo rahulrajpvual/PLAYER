@@ -723,7 +723,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
     scanVideo.remove();
   };
 
-  const handleSubtitleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onSubtitleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
@@ -2040,7 +2040,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
            ref={subtitleInputRef} 
            className="hidden" 
            accept=".srt,.vtt"
-           onChange={handleSubtitleUpload}
+           onChange={onSubtitleFileChange}
        />
     </div>
   );
