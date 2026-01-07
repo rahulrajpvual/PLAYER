@@ -538,12 +538,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
   useEffect(() => {
       if(!videoRef.current) return;
       
-      const onTracksChanged = () => {
+      const detectTracks = () => {
         try {
             const vid = videoRef.current as any;
-            
+            if (!vid) return;
+
             // Audio Tracks
-            if (vid && vid.audioTracks) {
+            if (vid.audioTracks) {
                 const tracks: AudioTrackInfo[] = [];
                 for (let i = 0; i < vid.audioTracks.length; i++) {
                     tracks.push({
@@ -553,58 +554,84 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                         enabled: vid.audioTracks[i].enabled
                     });
                 }
-                // Only update if changed to avoid loop
-                if (tracks.length !== audioTracks.length) {
+                 if (tracks.length !== audioTracks.length) {
                     setAudioTracks(tracks);
                 }
             }
 
             // Subtitle/Text Tracks (Embedded)
-            if (vid && vid.textTracks) {
+            if (vid.textTracks) {
                 const subs: SubtitleTrack[] = [];
                 
                 for(let i=0; i<vid.textTracks.length; i++) {
                     const t = vid.textTracks[i];
-                    // Skip our own uploaded tracks (they have 'upload-' prefix)
+                    // Skip our own uploaded tracks
                     if(t.id && t.id.startsWith('upload-')) continue;
 
-                    // Relaxed Filter: Accept all kinds (subtitles, captions, descriptions, chapters, metadata)
-                    // We just want to see if ANYTHING is there.
-                    // We'll give them a special ID prefix 'embedded-'
                     subs.push({
                         id: `embedded-${i}`,
                         label: t.label || `Embedded ${t.kind || 'Track'} ${i+1}`,
                         language: t.language,
-                        src: '' // Not used for embedded
+                        src: '' 
                     });
                 }
                 
-                if(subs.length > 0) {
-                    setSubtitles(prev => {
-                        const uploaded = prev.filter(p => p.id.startsWith('upload-'));
-                        
-                        // Strict check to see if we actually need to update
-                        // (Avoid infinite loops)
-                        const currentEmbedded = prev.filter(p => p.id.startsWith('embedded-'));
-                        if (currentEmbedded.length === subs.length) {
-                            // Deep(er) equality check on IDs
-                            const match = currentEmbedded.every((p, idx) => p.id === subs[idx].id);
-                            if (match) return prev;
-                        }
-                        
-                        return [...uploaded, ...subs];
-                    });
-                }
+                setSubtitles(prev => {
+                    const uploaded = prev.filter(p => p.id.startsWith('upload-'));
+                    
+                    const currentEmbedded = prev.filter(p => p.id.startsWith('embedded-'));
+                    // Check if actually changed
+                    if (currentEmbedded.length === subs.length && currentEmbedded.every((p, idx) => p.id === subs[idx].id)) {
+                        return prev;
+                    }
+
+                    if (subs.length > 0) {
+                        showFeedback(
+                            <div className="flex flex-col items-center">
+                                <MessageSquare size={30} />
+                                <span className="text-xs mt-1">Found {subs.length} Embedded Tracks</span>
+                            </div>
+                        );
+                    }
+                    
+                    return [...uploaded, ...subs];
+                });
             }
         } catch (e) {
             console.error("Error detecting tracks", e);
         }
       };
+
+      // Initial check
+      detectTracks();
       
-      // Some browsers populate tracks async
-      const interval = setInterval(onTracksChanged, 1000);
-      return () => clearInterval(interval);
-  }, [src]);
+      // Setup Event Listeners
+      const vid = videoRef.current;
+      if (vid && vid.textTracks) {
+          vid.textTracks.addEventListener('addtrack', detectTracks);
+          vid.textTracks.addEventListener('removetrack', detectTracks);
+          // Also listen for audio
+           if (vid.audioTracks) {
+              vid.audioTracks.addEventListener('addtrack', detectTracks);
+              vid.audioTracks.addEventListener('removetrack', detectTracks);
+           }
+      }
+      
+      // Fallback polling (keep 2s interval just in case events miss)
+      const interval = setInterval(detectTracks, 2000);
+
+      return () => {
+          clearInterval(interval);
+          if (vid && vid.textTracks) {
+              vid.textTracks.removeEventListener('addtrack', detectTracks);
+              vid.textTracks.removeEventListener('removetrack', detectTracks);
+               if (vid.audioTracks) {
+                  vid.audioTracks.removeEventListener('addtrack', detectTracks);
+                  vid.audioTracks.removeEventListener('removetrack', detectTracks);
+               }
+          }
+      };
+   }, [src]);
 
   // Handle Subtitle track switching for Custom Overlay
   useEffect(() => {
