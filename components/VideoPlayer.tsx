@@ -539,65 +539,65 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       if(!videoRef.current) return;
       
       const onTracksChanged = () => {
-        const vid = videoRef.current as any;
-        
-        // Audio Tracks
-        if (vid && vid.audioTracks) {
-            const tracks: AudioTrackInfo[] = [];
-            for (let i = 0; i < vid.audioTracks.length; i++) {
-                tracks.push({
-                    id: i.toString(),
-                    label: vid.audioTracks[i].label || `Track ${i+1}`,
-                    language: vid.audioTracks[i].language,
-                    enabled: vid.audioTracks[i].enabled
-                });
-            }
-            setAudioTracks(tracks);
-        }
-
-        // Subtitle/Text Tracks (Embedded)
-        if (vid && vid.textTracks && vid.textTracks.length > 0) {
-            const subs: SubtitleTrack[] = [];
-            // We can't easily get 'src' for embedded tracks, but we can list them so UI shows them
-            // Switching requires setting mode='showing' on the specific track object in DOM, 
-            // but our UI uses <track> tags for external. We need a way to support both.
-            // For now, let's just list them if they exist and aren't our external ones.
-            for(let i=0; i<vid.textTracks.length; i++) {
-                const t = vid.textTracks[i];
-                // Skip our own uploaded tracks (they have 'upload-' prefix)
-                if(t.id && t.id.startsWith('upload-')) continue;
-
-                // basic filter to avoid listing our own added <track> elements if possible
-                // (though <track> elements appear in textTracks too)
-                if(t.kind === 'subtitles' || t.kind === 'captions') {
-                   // We'll give them a special ID prefix 'embedded-'
-                   // Use the INDEX as the stable identifier for embedded tracks
-                   subs.push({
-                       id: `embedded-${i}`,
-                       label: t.label || `Embedded Track ${i+1}`,
-                       language: t.language,
-                       src: '' // Not used for embedded
-                   });
+        try {
+            const vid = videoRef.current as any;
+            
+            // Audio Tracks
+            if (vid && vid.audioTracks) {
+                const tracks: AudioTrackInfo[] = [];
+                for (let i = 0; i < vid.audioTracks.length; i++) {
+                    tracks.push({
+                        id: i.toString(),
+                        label: vid.audioTracks[i].label || `Track ${i+1}`,
+                        language: vid.audioTracks[i].language,
+                        enabled: vid.audioTracks[i].enabled
+                    });
+                }
+                // Only update if changed to avoid loop
+                if (tracks.length !== audioTracks.length) {
+                    setAudioTracks(tracks);
                 }
             }
-            // Only update if we found new ones different from external
-            if(subs.length > 0) {
-                setSubtitles(prev => {
-                    // Keep existing uploaded tracks (those with src)
-                    const uploaded = prev.filter(p => p.id.startsWith('upload-'));
-                    
-                    // Create a map of existing IDs to avoid flicker/re-render if nothing changed
-                    const existingIds = new Set(prev.map(p => p.id));
-                    const newIds = new Set([...uploaded.map(u => u.id), ...subs.map(s => s.id)]);
-                    
-                    // Simple equality check to avoid infinite render loops
-                    if (existingIds.size === newIds.size && [...existingIds].every(id => newIds.has(id))) {
-                        return prev;
-                    }
-                    
-                    return [...uploaded, ...subs];
-                });
+
+            // Subtitle/Text Tracks (Embedded)
+            if (vid && vid.textTracks) {
+                const subs: SubtitleTrack[] = [];
+                
+                for(let i=0; i<vid.textTracks.length; i++) {
+                    const t = vid.textTracks[i];
+                    // Skip our own uploaded tracks (they have 'upload-' prefix)
+                    if(t.id && t.id.startsWith('upload-')) continue;
+
+                    // Relaxed Filter: Accept all kinds (subtitles, captions, descriptions, chapters, metadata)
+                    // We just want to see if ANYTHING is there.
+                    // We'll give them a special ID prefix 'embedded-'
+                    subs.push({
+                        id: `embedded-${i}`,
+                        label: t.label || `Embedded ${t.kind || 'Track'} ${i+1}`,
+                        language: t.language,
+                        src: '' // Not used for embedded
+                    });
+                }
+                
+                if(subs.length > 0) {
+                    setSubtitles(prev => {
+                        const uploaded = prev.filter(p => p.id.startsWith('upload-'));
+                        
+                        // Strict check to see if we actually need to update
+                        // (Avoid infinite loops)
+                        const currentEmbedded = prev.filter(p => p.id.startsWith('embedded-'));
+                        if (currentEmbedded.length === subs.length) {
+                            // Deep(er) equality check on IDs
+                            const match = currentEmbedded.every((p, idx) => p.id === subs[idx].id);
+                            if (match) return prev;
+                        }
+                        
+                        return [...uploaded, ...subs];
+                    });
+                }
             }
+        } catch (e) {
+            console.error("Error detecting tracks", e);
         }
       };
       
