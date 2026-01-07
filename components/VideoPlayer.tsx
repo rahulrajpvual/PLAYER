@@ -607,34 +607,52 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
           }
       };
 
-      // Set all tracks to 'hidden' (so events fire but native UI is off) OR 'disabled'
-      Array.from(vid.textTracks).forEach((t: any) => {
-          // Cleanup previous listeners to avoid dupes/leaks
-          t.oncuechange = null;
+      // Helper to apply mode and listeners
+      const applyTrackMode = () => {
+          let found = false;
+          Array.from(vid.textTracks).forEach((t: any) => {
+              // Cleanup previous listeners to avoid dupes/leaks
+              t.oncuechange = null;
 
-          // If this track matches our active ID, set to 'hidden' so we can read its cues
-          // Otherwise set to 'disabled' to save performance
-          const isMatch = (t.id === activeSubtitleId || t.label === activeSubtitleId);
-          // Special case for embedded tracks which we might have labeled as embedded-0 etc
-          const isEmbeddedMatch = activeSubtitleId.startsWith('embedded-') && vid.textTracks[parseInt(activeSubtitleId.split('-')[1])] === t;
-          
-          if (activeSubtitleId !== 'off' && (isMatch || isEmbeddedMatch)) {
-              t.mode = 'hidden';
-              t.oncuechange = handleCueChange;
+              const isMatch = (t.id === activeSubtitleId || t.label === activeSubtitleId);
+              // Special case for embedded tracks which we might have labeled as embedded-0 etc
+              const isEmbeddedMatch = activeSubtitleId.startsWith('embedded-') && vid.textTracks[parseInt(activeSubtitleId.split('-')[1])] === t;
               
-              // Trigger immediate update in case there are already cues
-              if(t.activeCues && t.activeCues.length > 0) {
-                 const cues = Array.from(t.activeCues).map((c: any) => c.text);
-                 setCurrentCues(cues);
+              if (activeSubtitleId !== 'off' && (isMatch || isEmbeddedMatch)) {
+                  t.mode = 'hidden';
+                  t.oncuechange = handleCueChange;
+                  found = true;
+                  
+                  // Trigger immediate update in case there are already cues
+                  if(t.activeCues && t.activeCues.length > 0) {
+                     const cues = Array.from(t.activeCues).map((c: any) => c.text);
+                     setCurrentCues(cues);
+                  } else {
+                     setCurrentCues([]);
+                  }
               } else {
-                 setCurrentCues([]);
+                  t.mode = 'disabled';
               }
-          } else {
-              t.mode = 'disabled';
+          });
+          return found;
+      };
+
+      // Initial attempt
+      let found = applyTrackMode();
+
+      // Retry mechanism for React-rendered tracks (race condition fix)
+      let attempt = 0;
+      const retryInterval = setInterval(() => {
+          if (found || attempt > 10) {
+              clearInterval(retryInterval);
+              return;
           }
-      });
+          found = applyTrackMode();
+          attempt++;
+      }, 100);
       
       return () => {
+           clearInterval(retryInterval);
            Array.from(vid.textTracks).forEach((t: any) => {
                t.oncuechange = null;
            });
@@ -1461,6 +1479,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
               {subtitles.map(track => (
                   <track 
                       key={track.id}
+                      id={track.id} 
                       kind="subtitles"
                       src={track.src}
                       label={track.label}
