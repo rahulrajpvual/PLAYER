@@ -963,36 +963,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       // Note: Cloud delete not implemented in mock, would need specific ID handling
   };
 
-  // --- Subtitles ---
-  const handleSubtitleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files[0]) {
-          const file = e.target.files[0];
-          const reader = new FileReader();
-          reader.onload = (event) => {
-              const text = event.target?.result as string;
-              let vttText = text;
-              
-              if (file.name.endsWith('.srt')) {
-                  vttText = srtToVtt(text);
-              }
-              
-              const blob = new Blob([vttText], { type: 'text/vtt' });
-              const url = URL.createObjectURL(blob);
-              
-              const newTrack: SubtitleTrack = {
-                  id: Date.now().toString(),
-                  label: file.name,
-                  language: 'en',
-                  src: url
-              };
-              
-              setSubtitles(prev => [...prev, newTrack]);
-              setActiveSubtitleId(newTrack.id);
-              showFeedback(<div className="flex flex-col items-center"><MessageSquare size={30} /><span className="text-xs mt-1">Subs Added</span></div>);
-          };
-          reader.readAsText(file);
-      }
-  };
+
 
   // --- Subtitle & Audio Sync Handlers ---
   useEffect(() => {
