@@ -564,10 +564,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
             // For now, let's just list them if they exist and aren't our external ones.
             for(let i=0; i<vid.textTracks.length; i++) {
                 const t = vid.textTracks[i];
+                // Skip our own uploaded tracks (they have 'upload-' prefix)
+                if(t.id && t.id.startsWith('upload-')) continue;
+
                 // basic filter to avoid listing our own added <track> elements if possible
                 // (though <track> elements appear in textTracks too)
                 if(t.kind === 'subtitles' || t.kind === 'captions') {
                    // We'll give them a special ID prefix 'embedded-'
+                   // Use the INDEX as the stable identifier for embedded tracks
                    subs.push({
                        id: `embedded-${i}`,
                        label: t.label || `Embedded Track ${i+1}`,
@@ -578,11 +582,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
             }
             // Only update if we found new ones different from external
             if(subs.length > 0) {
-                // Merge/Dedupe logic could go here, but for now let's just add them to state if not present?
-                // Actually, simply setting them is safer for now, assuming external ones are added via state explicitly.
-                // We'll trust the user added ones (file uploads) over embedded for the 'src' prop, 
-                // but we need to include these for the UI list.
-                // NOTE: Changing embedded tracks requires modifying the track.mode directly.
+                setSubtitles(prev => {
+                    // Keep existing uploaded tracks (those with src)
+                    const uploaded = prev.filter(p => p.id.startsWith('upload-'));
+                    
+                    // Create a map of existing IDs to avoid flicker/re-render if nothing changed
+                    const existingIds = new Set(prev.map(p => p.id));
+                    const newIds = new Set([...uploaded.map(u => u.id), ...subs.map(s => s.id)]);
+                    
+                    // Simple equality check to avoid infinite render loops
+                    if (existingIds.size === newIds.size && [...existingIds].every(id => newIds.has(id))) {
+                        return prev;
+                    }
+                    
+                    return [...uploaded, ...subs];
+                });
             }
         }
       };
@@ -1476,7 +1490,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
             playsInline
             crossOrigin="anonymous" // Support max quality / CORS for audio analysis
           >
-              {subtitles.map(track => (
+              {subtitles.map(track => {
+                  if(!track.src) return null; // Don't render <track> for embedded subs (they exist natively)
+                  return (
                   <track 
                       key={track.id}
                       id={track.id} 
@@ -1486,7 +1502,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
                       srcLang={track.language}
                       // Mode is managed via the useEffect above
                   />
-              ))}
+              )})}
           </video>
 
           {/* KMPlayer Style Subtitle Overlay */}
