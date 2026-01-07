@@ -597,8 +597,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
       if(!videoRef.current) return;
       const vid = videoRef.current;
       
+      const handleCueChange = (e: Event) => {
+          const track = e.target as TextTrack;
+          if (track && track.activeCues) {
+              const cues = Array.from(track.activeCues).map(c => (c as VTTCue).text);
+              setCurrentCues(cues);
+          } else {
+              setCurrentCues([]);
+          }
+      };
+
       // Set all tracks to 'hidden' (so events fire but native UI is off) OR 'disabled'
       Array.from(vid.textTracks).forEach((t: any) => {
+          // Cleanup previous listeners to avoid dupes/leaks
+          t.oncuechange = null;
+
           // If this track matches our active ID, set to 'hidden' so we can read its cues
           // Otherwise set to 'disabled' to save performance
           const isMatch = (t.id === activeSubtitleId || t.label === activeSubtitleId);
@@ -607,10 +620,25 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
           
           if (activeSubtitleId !== 'off' && (isMatch || isEmbeddedMatch)) {
               t.mode = 'hidden';
+              t.oncuechange = handleCueChange;
+              
+              // Trigger immediate update in case there are already cues
+              if(t.activeCues && t.activeCues.length > 0) {
+                 const cues = Array.from(t.activeCues).map((c: any) => c.text);
+                 setCurrentCues(cues);
+              } else {
+                 setCurrentCues([]);
+              }
           } else {
               t.mode = 'disabled';
           }
       });
+      
+      return () => {
+           Array.from(vid.textTracks).forEach((t: any) => {
+               t.oncuechange = null;
+           });
+      };
   }, [activeSubtitleId, subtitles]);
 
   // --- Color Analysis Logic ---
@@ -693,7 +721,36 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ file, onClose }) => {
     
     // Cleanup
     scanVideo.remove();
-    scanCanvas.remove();
+  };
+
+  const handleSubtitleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const renderReader = new FileReader();
+      renderReader.onload = (e) => {
+          const content = e.target?.result as string;
+          let vttContent = content;
+          if (file.name.endsWith('.srt')) {
+              vttContent = srtToVtt(content);
+          }
+          
+          const blob = new Blob([vttContent], { type: 'text/vtt' });
+          const url = URL.createObjectURL(blob);
+          
+          const newTrack: SubtitleTrack = {
+              id: `upload-${Date.now()}`,
+              label: file.name,
+              language: 'en',
+              src: url
+          };
+          
+          setSubtitles(prev => [...prev, newTrack]);
+          setActiveSubtitleId(newTrack.id);
+          
+          showFeedback(<div className="flex flex-col items-center"><Check size={40} /><span className="text-sm font-black uppercase mt-2">Subtitle Added</span></div>);
+      };
+      renderReader.readAsText(file);
   };
 
 
